@@ -1,0 +1,44 @@
+[gd_scene load_steps=6 format=3 uid="uid://hof5l0e8of35"]
+
+[ext_resource type="Script" path="res://Scripts/LevelGenerator.cs" id="1_g367s"]
+[ext_resource type="Texture2D" uid="uid://dg5x5jonbebk0" path="res://Sprites/Tiles/Gray.png" id="1_r81t1"]
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_s8nlw"]
+noise_type = 0
+frequency = 0.03
+domain_warp_frequency = 0.005
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_eij5s"]
+texture = ExtResource("1_r81t1")
+texture_region_size = Vector2i(8, 8)
+0:0/0 = 0
+0:0/0/physics_layer_0/linear_velocity = Vector2(0, 0)
+0:0/0/physics_layer_0/angular_velocity = 0.0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-4, -4, 4, -4, 4, 4, -4, 4)
+
+[sub_resource type="TileSet" id="TileSet_an0b8"]
+tile_size = Vector2i(8, 8)
+physics_layer_0/collision_layer = 1
+sources/0 = SubResource("TileSetAtlasSource_eij5s")
+
+[node name="GameScene" type="Node2D"]
+
+[node name="LevelGenerator" type="Node2D" parent="."]
+script = ExtResource("1_g367s")
+noise = SubResource("FastNoiseLite_s8nlw")
+
+[node name="TileMap" type="TileMap" parent="LevelGenerator"]
+tile_set = SubResource("TileSet_an0b8")
+format = 2
+layer_0/name = "Foreground"
+layer_1/name = "Background"
+layer_1/enabled = true
+layer_1/modulate = Color(0.501961, 0.501961, 0.501961, 1)
+layer_1/y_sort_enabled = false
+layer_1/y_sort_origin = 0
+layer_1/z_index = -1
+layer_1/tile_data = PackedInt32Array()
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(0, -450)
+zoom = Vector2(0.6, 0.6)
