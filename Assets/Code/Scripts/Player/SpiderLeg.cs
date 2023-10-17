@@ -7,9 +7,12 @@ namespace Crabs.Player
     {
         private const int IkIterations = 20;
 
-        public Transform upperLeg, lowerLeg;
+        public Transform upperLeg, lowerLeg, tipTransform;
+        public ParticleSystem stepDust;
 
         public SpiderController Spider { get; private set; }
+        public Vector2? OverrideTargetLocal { get; set; }
+        public bool Locked { get; set; }
 
         public Vector2 root, mid, tip;
         public Vector2 target;
@@ -19,6 +22,7 @@ namespace Crabs.Player
         public bool anchored;
 
         public bool controlled;
+        public bool stepped;
         public Item heldItem;
 
         public SpiderLeg(Transform upperLeg, Transform lowerLeg, int i, bool controlled)
@@ -26,6 +30,9 @@ namespace Crabs.Player
             this.upperLeg = upperLeg;
             this.lowerLeg = lowerLeg;
             this.controlled = controlled;
+
+            tipTransform = lowerLeg.GetChild(0);
+            stepDust = tipTransform.GetComponentInChildren<ParticleSystem>();
 
             var a = (i * 90.0f + 45.0f) * Mathf.Deg2Rad;
             restPosition = new Vector2(Mathf.Cos(a) * 2.0f, Mathf.Sin(a)).normalized;
@@ -37,6 +44,11 @@ namespace Crabs.Player
             root = spider.Body.position;
 
             actual = Vector3.Lerp(target, actual, spider.legSmoothing);
+            if ((target - actual).magnitude < 0.02f && !stepped)
+            {
+                stepDust.Play();
+                stepped = true;
+            }
 
             UpdateAnchor();
             UpdateTarget();
@@ -48,10 +60,18 @@ namespace Crabs.Player
 
         private void UpdateTarget()
         {
-            if (controlled && Spider.Input.Reaching)
+            if (OverrideTargetLocal.HasValue)
+            {
+                anchored = false;
+                target = Spider.Body.position + OverrideTargetLocal.Value * Spider.LegTotalLength;
+                return;
+            }
+
+            if (controlled && Spider.Reaching)
             {
                 anchored = false;
                 target = Spider.Body.position + Spider.Input.ReachDirection * Spider.LegTotalLength;
+                Collide(ref target);
             }
             else
             {
@@ -59,14 +79,25 @@ namespace Crabs.Player
             }
         }
 
+        private void Collide(ref Vector2 end)
+        {
+            var hit = Physics2D.Linecast(root, end);
+            if (hit)
+            {
+                end = hit.point;
+            }
+        }
+
         private void UpdateAnchor()
         {
+            if (Locked) return;
             if (anchored)
             {
                 if ((anchoredPosition - Spider.Body.position).magnitude > Spider.LegTotalLength)
                 {
                     anchored = false;
                 }
+
                 return;
             }
 
@@ -89,6 +120,7 @@ namespace Crabs.Player
                     best = score;
                     anchoredPosition = cast.point;
                     anchored = true;
+                    stepped = false;
                 }
             }
         }
@@ -96,12 +128,14 @@ namespace Crabs.Player
         private void UpdateHeldItem()
         {
             if (!controlled) return;
-            if (!Spider.Input.Reaching) return;
+            if (!Spider.Reaching) return;
+
+            stepped = true;
             
             if (heldItem)
             {
                 target = heldItem.ModifyReachPosition(target) ?? target;
-                
+
                 if (Spider.Input.PrimaryUse)
                 {
                     heldItem.PrimaryUse();
@@ -129,10 +163,10 @@ namespace Crabs.Player
 
         private void UpdateTransforms()
         {
-            upperLeg.position = root;
+            upperLeg.position = new Vector3(root.x, root.y, upperLeg.position.z);
             upperLeg.right = mid - root;
 
-            lowerLeg.position = mid;
+            lowerLeg.position = new Vector3(mid.x, mid.y, lowerLeg.position.z);
             lowerLeg.right = tip - mid;
         }
 
@@ -153,6 +187,7 @@ namespace Crabs.Player
             }
 
             if (flipped) flip();
+            HintLeg();
 
             void flip()
             {
@@ -176,6 +211,29 @@ namespace Crabs.Player
 
                 flipped = !flipped;
             }
+        }
+
+        private void HintLeg()
+        {
+            if (Locked) return;
+
+            var up = (Spider.Body.position - Spider.GroundPoint).normalized;
+
+            var a = mid;
+
+            var vector = (a - root);
+            var normal = (tip - root).normalized;
+            var tangent = new Vector2(-normal.y, normal.x);
+
+            var dn = Vector2.Dot(normal, vector);
+            var dt = Vector2.Dot(tangent, vector);
+
+            var b = root + normal * dn - tangent * dt;
+
+            var da = Mathf.Abs(Vector2.Dot(a - root, up));
+            var db = Mathf.Abs(Vector2.Dot(b - root, up));
+
+            if (db < da) mid = b;
         }
     }
 }

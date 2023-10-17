@@ -56,6 +56,7 @@ MonoBehaviour:
   recoilImpulse: 40
   recoilSpring: 300
   recoilDamper: 25
+  shootForce: 8
   muzzle: {fileID: 8953100327533001161}
   muzzleFlash: {fileID: 3213276520235633478, guid: a0905d4a4992be2489e1d026d5c506f1, type: 3}
   deadFlash: {fileID: 330285427401332882, guid: 0d8e9f1406d4b5a40af1dcd03b5b1413, type: 3}

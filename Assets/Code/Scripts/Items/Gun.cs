@@ -15,9 +15,10 @@ namespace Crabs.Items
         [SerializeField] private int ammo = 4;
         [SerializeField] private float fireDelay = 0.2f;
         [SerializeField][Range(0.0f, 1.0f)] private float armBrace = 0.9f;
-        [SerializeField] private float recoilImpulse = 10.0f;
-        [SerializeField] private float recoilSpring = 100.0f;
-        [SerializeField] private float recoilDamper = 10.0f;
+        [SerializeField] private float recoilImpulse = 40.0f;
+        [SerializeField] private float recoilSpring = 300.0f;
+        [SerializeField] private float recoilDamper = 25.0f;
+        [SerializeField] private float shootForce = 10.0f;
         [SerializeField] private Transform muzzle;
         [SerializeField] private ParticleSystem muzzleFlash;
         [SerializeField] private ParticleSystem deadFlash;
@@ -52,11 +53,13 @@ namespace Crabs.Items
                 return;
             }
 
-            projectile.Spawn(muzzle, muzzleSpeed, damage);
+            projectile.Spawn(transform, muzzleSpeed, damage);
 
-            var recoilDirection = (Binding.tip - Binding.mid).normalized;
-            recoilForce -= recoilDirection * recoilImpulse / Time.fixedDeltaTime;
+            var recoilDirection = (Binding.mid - Binding.tip).normalized;
+            recoilForce += recoilDirection * recoilImpulse / Time.fixedDeltaTime;
             ammo--;
+            
+            Binding.Spider.Body.AddForce(recoilDirection * shootForce, ForceMode2D.Impulse);
 
             Instantiate(muzzleFlash, muzzle.position, muzzle.rotation);
         }

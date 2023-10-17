@@ -39,7 +39,7 @@ namespace Crabs.Items
             transform.position = position;
             transform.rotation = Quaternion.Euler(0.0f, 0.0f, rotation * Mathf.Rad2Deg);
         }
-        
+
         public abstract void PrimaryUse();
         public abstract void SecondaryUse();
 

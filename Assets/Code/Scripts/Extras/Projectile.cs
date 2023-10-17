@@ -19,8 +19,8 @@ namespace Crabs.Extras
         {
             var instance = Instantiate(this);
             instance.damage = damage;
-            instance.transform.position = muzzle.position;
             instance.velocity = muzzle.right.normalized * muzzleSpeed;
+            instance.transform.position = muzzle.position;
             return instance;
         }
 

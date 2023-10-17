@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Crabs.Items;
 using UnityEngine;
@@ -23,18 +24,22 @@ namespace Crabs.Player
         [SerializeField] [Range(0.0f, 1.0f)] private float bodyPartSmoothing = 0.8f;
         [SerializeField] [Range(0.0f, 1.0f)] private float cameraSmoothing = 0.1f;
 
-        private const int LegCastLayerMask = 0b011111111;
+        private const int LegCastLayerMask = 0b001111111;
         
         private Camera mainCam;
-        private Vector2 groundVector = Vector2.down;
 
+        private SpiderState currentState;
+
+        public Vector2 GroundPoint { get; private set; }
         public SpiderInput Input { get; private set; }
         public Rigidbody2D Body { get; private set; }
         public float LegUpperLength { get; private set; }
         public float LegLowerLength { get; private set; }
         public float LegTotalLength { get; private set; }
+        public bool Reaching { get; set; }
         public Vector2 ReachVector { get; private set; }
         public int Direction { get; private set; } = 1;
+        public bool Anchored { get; private set; }
         public SpiderLeg ArmLeg => legs[0];
 
         private Transform butt, head;
@@ -67,6 +72,14 @@ namespace Crabs.Player
                 legTips[i] = legMids[i].GetChild(0);
 
                 legs.Add(new SpiderLeg(legRoots[i], legMids[i], i, i == 0));
+                bodyParts.Add(new SpiderBodyPart(legRoots[i])
+                {
+                    flip = false,
+                });
+                bodyParts.Add(new SpiderBodyPart(legMids[i])
+                {
+                    flip = false,
+                });
             }
 
             LegUpperLength = (legRoots[0].position - legMids[0].position).magnitude;
@@ -74,12 +87,44 @@ namespace Crabs.Player
             LegTotalLength = LegUpperLength + LegLowerLength;
         }
 
+        private void Start()
+        {
+            ChangeState(new SpiderMoveState());
+
+            var propertyBlock = new MaterialPropertyBlock();
+            propertyBlock.SetInt("_Index", Input.Index);
+            
+            foreach (var e in bodyParts) e.SetMaterialPropertyBlock(propertyBlock);
+        }
+
         private void FixedUpdate()
         {
             Cast();
+            UpdateLegs();
+            UpdateDirection();
 
-            ReachVector = Input.ReachDirection * LegTotalLength;
+            currentState.FixedUpdate(this);
+
+            UpdateCamera();
+            Input.ResetTriggers();
+        }
+
+        private void UpdateDirection()
+        {
+            var groundVector = GroundPoint - Body.position;
             
+            var facing = Input.MoveDirection.x * -groundVector.y;
+            if (Mathf.Abs(facing) > 0.2f) Direction = facing > 0.0f ? 1 : -1;
+            foreach (var e in bodyParts)
+            {
+                e.FixedUpdate(Direction, bodyPartSmoothing);
+            }
+        }
+
+        private void UpdateLegs()
+        {
+            ReachVector = Input.ReachDirection * LegTotalLength;
+
             var legsAnchored = 0;
             foreach (var leg in legs)
             {
@@ -87,28 +132,22 @@ namespace Crabs.Player
                 if (leg.anchored) legsAnchored++;
             }
 
-            var facing = Input.MoveDirection.x * -groundVector.y;
-            if (Mathf.Abs(facing) > 0.2f) Direction = facing > 0.0f ? 1 : -1;
-            foreach (var e in bodyParts)
-            {
-                e.FixedUpdate(Direction, bodyPartSmoothing);
-            }
-            
-            var anchored = legsAnchored > 0;
+            Anchored = legsAnchored > 0;
+        }
 
-            if (anchored)
-            {
-                var target = Input.MoveDirection * moveSpeed;
-                var force = (target - Body.velocity) * 2.0f / accelerationTime;
-                Body.AddForce((force - Physics2D.gravity * Body.gravityScale) * Body.mass);
+        public void Move(Vector2 input)
+        {
+            if (!Anchored) return;
 
-                var targetAngle = Mathf.Atan2(groundVector.y, groundVector.x) * Mathf.Rad2Deg + 90.0f;
-                var torque = (targetAngle - Body.rotation) * rotationSpring - Body.angularVelocity * rotationDamping;
-                Body.AddTorque(torque);
-            }
+            var target = Vector2.ClampMagnitude(input, 1.0f) * moveSpeed;
 
-            UpdateCamera();
-            Input.ResetTriggers();
+            var force = (target - Body.velocity) * 2.0f / accelerationTime;
+            Body.AddForce((force - Physics2D.gravity * Body.gravityScale) * Body.mass);
+
+            var groundVector = GroundPoint - Body.position;
+            var targetAngle = Mathf.Atan2(groundVector.y, groundVector.x) * Mathf.Rad2Deg + 90.0f;
+            var torque = Mathf.DeltaAngle(Body.rotation, targetAngle) * rotationSpring - Body.angularVelocity * rotationDamping;
+            Body.AddTorque(torque);
         }
 
         private void Cast()
@@ -134,9 +173,16 @@ namespace Crabs.Player
             if (hits == 0) return;
             
             groundPoint /= hits;
-            groundVector = (groundPoint - Body.position).normalized;
+            GroundPoint = groundPoint;
         }
 
+        public void ChangeState(SpiderState newState)
+        {
+            if (currentState != null) currentState.Exit(this);
+            currentState = newState;
+            if (currentState != null) currentState.Enter(this);
+        }
+        
         private void UpdateCamera()
         {
             var position = new Vector3

@@ -1,0 +1,86 @@
+:root {
+    -unity-font: url('project://database/Assets/Content/Fonts/Files/Montserrat-Black.otf?fileID=12800000&guid=6f047c75c898eb0428eb764ada2088a4&type=3#Montserrat-Black');
+    -unity-font-definition: url('project://database/Assets/Content/Fonts/Assets/Montserrat-Black%20SDF.asset?fileID=11400000&guid=e006cf064d206db4598586d3452a13d6&type=2#Montserrat-Black SDF');
+}
+
+.background {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgb(30, 20, 25);
+    opacity: 0.9;
+}
+
+.background-transparent {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgb(30, 20, 25);
+    opacity: 0.9;
+}
+
+.h1 {
+    font-size: 42px;
+    margin-left: 25px;
+    margin-right: 25px;
+    margin-top: 25px;
+    margin-bottom: 25px;
+    border-left-width: 10px;
+    border-left-color: rgba(255, 255, 255, 255);
+    border-right-color: rgba(255, 255, 255, 255);
+    border-top-color: rgba(255, 255, 255, 255);
+    border-bottom-color: rgba(255, 255, 255, 255);
+    padding-left: 10px;
+}
+
+.menu-content {
+    flex-grow: 1;
+    margin-left: 50px;
+    margin-right: 50px;
+    margin-top: 0;
+    margin-bottom: 50px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgba(255, 255, 255, 255);
+    border-right-color: rgba(255, 255, 255, 255);
+    border-top-color: rgba(255, 255, 255, 255);
+    border-bottom-color: rgba(255, 255, 255, 255);
+    padding-left: 5px;
+    padding-right: 5px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+.unity-button {
+    -unity-text-align: upper-left;
+    padding-left: 15px;
+    padding-right: 8px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    transition-duration: 50ms;
+    transition-timing-function: ease-out;
+    border-left-width: 0;
+    border-right-width: 0;
+    border-top-width: 0;
+    border-bottom-width: 0;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-left-color: rgba(255, 255, 255, 255);
+    border-right-color: rgba(255, 255, 255, 255);
+    border-top-color: rgba(255, 255, 255, 255);
+    border-bottom-color: rgba(255, 255, 255, 255);
+    background-color: rgba(142, 96, 73, 0.25);
+    font-size: 14px;
+}
+
+.unity-button:hover {
+    margin-left: -15px;
+    margin-right: -15px;
+    background-color: rgba(142, 96, 73, 0.68);
+}

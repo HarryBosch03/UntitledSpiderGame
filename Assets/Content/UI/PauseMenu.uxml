@@ -1,0 +1,10 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Content/UI/DefaultStyleSheet.uss?fileID=7433441132597879392&amp;guid=a1ce349c1579d21489092f0582e54c70&amp;type=3#DefaultStyleSheet" />
+    <ui:VisualElement name="background" class="background-transparent" />
+    <ui:Label text="Paused" display-tooltip-when-elided="true" name="heading" class="h1" />
+    <ui:VisualElement name="content" class="menu-content">
+        <ui:Button text="Resume" display-tooltip-when-elided="true" name="resume" />
+        <ui:Button text="Reload Scene" display-tooltip-when-elided="true" name="reload-scene" />
+        <ui:Button text="Quit" display-tooltip-when-elided="true" name="quit" />
+    </ui:VisualElement>
+</ui:UXML>

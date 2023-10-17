@@ -18,6 +18,8 @@ namespace Crabs.Generation
         private Mesh mesh;
         private PhysicsShapeGroup2D shape;
 
+        private Texture2D mapTexture;
+
         private List<Vector3> vertices;
         private List<Color> vertexColors;
         private List<Vector2> uvs;
@@ -45,9 +47,8 @@ namespace Crabs.Generation
 
             if (!mesh)
             {
-                mesh = new Mesh();
+                mesh = meshFilter.sharedMesh ? meshFilter.sharedMesh : new Mesh();
                 mesh.name = "[PROC] IslandMeshinator.Mesh";
-                mesh.hideFlags = HideFlags.HideAndDontSave;
             }
 
             meshFilter.sharedMesh = mesh;
@@ -139,7 +140,7 @@ namespace Crabs.Generation
         {
             return lerp(lerp(a, b, interpolation.x), lerp(c, d, interpolation.x), interpolation.y);
         }
-        
+
         private void SetCollider()
         {
             collider = GetComponent<CustomCollider2D>();
