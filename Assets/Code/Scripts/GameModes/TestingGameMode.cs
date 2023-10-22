@@ -1,9 +1,7 @@
-using System;
 using System.Collections.Generic;
 using Crabs.Player;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.Users;
 
 namespace Crabs.GameModes
 {
@@ -14,7 +12,7 @@ namespace Crabs.GameModes
         [SerializeField] private SpiderInput spiderPrefab;
         [SerializeField] private InputAction joinAction = new(binding: "/*/<button>");
 
-        private static readonly List<InputUser> RegisteredUsers = new();
+        private static readonly List<InputDevice> RegisteredDevices = new();
 
         protected override void OnEnable()
         {
@@ -27,7 +25,7 @@ namespace Crabs.GameModes
         protected override void OnDisable()
         {
             base.OnDisable();
-            
+
             joinAction.started -= JoinDevice;
             joinAction.Disable();
         }
@@ -36,20 +34,29 @@ namespace Crabs.GameModes
 
         private void JoinDevice(InputDevice device)
         {
-            if (device is Mouse) return;
-            
-            foreach (var otherUser in RegisteredUsers)
+            foreach (var other in RegisteredDevices)
             {
-                foreach (var otherDevice in otherUser.pairedDevices)
-                {
-                    if (otherDevice == device) return;
-                }
+                if (other == device) return;
             }
 
-            var user = InputUser.PerformPairingWithDevice(device);
-            RegisteredUsers.Add(user);
+            switch (device)
+            {
+                case Keyboard:
+                    bind(device, Mouse.current);
+                    break;
+                case Mouse:
+                    bind(Keyboard.current, device);
+                    break;
+                default:
+                    bind(device);
+                    break;
+            }
 
-            spiderPrefab.SpawnWithUser(user);
+            void bind(params InputDevice[] devices)
+            {
+                spiderPrefab.SpawnWithUser(devices);
+                foreach (var e in devices) RegisteredDevices.Add(e);
+            }
         }
     }
 }

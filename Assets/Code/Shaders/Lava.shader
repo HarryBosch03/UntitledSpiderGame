@@ -36,7 +36,7 @@ Shader "Unlit/Lava"
 
             struct Varyings
             {
-                float2 uv : TEXCOORD0;
+                float2 uv0 : TEXCOORD0;
                 float4 vertex : SV_POSITION;
             };
 
@@ -49,7 +49,7 @@ Shader "Unlit/Lava"
                 Varyings output;
                 float3 offset = float3(0.0, _WaveHeight / 16.0, 0.0);
                 float3 worldPos = TransformObjectToWorld(input.vertex.xyz) + + offset;
-                output.uv = worldPos.xy - TransformObjectToWorld(float3(-0.5, 0.5, 0.0)).xy;
+                output.uv0 = worldPos.xy - TransformObjectToWorld(float3(-0.5, 0.5, 0.0)).xy;
                 output.vertex = TransformWorldToHClip(worldPos);
                 return output;
             }
@@ -86,7 +86,7 @@ Shader "Unlit/Lava"
 
             half4 frag(Varyings input) : SV_Target
             {
-                float2 uv = float2(input.uv.x, -input.uv.y);
+                float2 uv = float2(input.uv0.x, -input.uv0.y);
                 uv = floor(uv * 16) / 16;
 
                 float wave = Waves(uv.x);

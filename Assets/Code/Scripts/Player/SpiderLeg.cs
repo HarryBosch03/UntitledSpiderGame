@@ -70,7 +70,7 @@ namespace Crabs.Player
             if (controlled && Spider.Reaching)
             {
                 anchored = false;
-                target = Spider.Body.position + Spider.Input.ReachDirection * Spider.LegTotalLength;
+                target = Spider.Body.position + Spider.Input.ReachVector * Spider.LegTotalLength;
                 Collide(ref target);
             }
             else

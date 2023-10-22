@@ -28,7 +28,7 @@ Shader "Unlit/Flipbook"
 
 			struct Varyings
 			{
-				float2 uv : TEXCOORD0;
+				float2 uv0 : TEXCOORD0;
 				float4 vertex : SV_POSITION;
 			};
 
@@ -36,7 +36,7 @@ Shader "Unlit/Flipbook"
 			{
 				Varyings output;
 				output.vertex = TransformObjectToHClip(input.vertex.xyz);
-				output.uv = input.uv;
+				output.uv0 = input.uv;
 				return output;
 			}
 
@@ -51,7 +51,7 @@ Shader "Unlit/Flipbook"
 			
 			half4 frag (Varyings input) : SV_Target
 			{
-				float2 uv = input.uv / float2(_HFrames, _VFrames);
+				float2 uv = input.uv0 / float2(_HFrames, _VFrames);
 				int i = floor(_Time.y * _Framerate) % (_HFrames * _VFrames);
 				uv.x += (float)i / _HFrames;
 				uv.y += (float)i / (_HFrames * _VFrames);

@@ -5,6 +5,7 @@ using Crabs.Utility;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Users;
+using UnityEngine.InputSystem.Utilities;
 
 namespace Crabs.Player
 {
@@ -27,7 +28,7 @@ namespace Crabs.Player
         
         public int Index { get; private set; }
         public Vector2 MoveDirection { get; private set; }
-        public Vector2 ReachDirection { get; private set; } = Vector2.up;
+        public Vector2 ReachVector { get; private set; } = Vector2.up;
         public bool Reaching { get; private set; }
         public bool PrimaryUse { get; set; }
         public bool SecondaryUse { get; set; }
@@ -63,16 +64,6 @@ namespace Crabs.Player
             All.Add(this);
         }
 
-        private int FloorLog2(int x)
-        {
-            x = x | (x >> 1);
-            x = x | (x >> 2);
-            x = x | (x >> 4);
-            x = x | (x >> 8);
-            x = x | (x >> 16);
-            return x - (x >> 1);
-        }
-
         private void OnDisable()
         {
             Index = -1;
@@ -85,7 +76,7 @@ namespace Crabs.Player
 
             var reachInput = reachAction.Vector2();
             Reaching = reachInput.magnitude > reachThreshold;
-            if (Reaching) ReachDirection = reachInput.normalized;
+            if (Reaching) ReachVector = Vector2.ClampMagnitude(reachInput, 1);
 
             PrimaryUse = primaryUseAction.Flag(PrimaryUse);
             SecondaryUse = secondaryUseAction.Flag(SecondaryUse);
@@ -115,7 +106,7 @@ namespace Crabs.Player
             Reaching = true;
 
             var mousePosition = mainCamera.ScreenToWorldPoint(m.position.ReadValue());
-            ReachDirection = ((Vector2)(mousePosition - transform.position)).normalized;
+            ReachVector = Vector2.ClampMagnitude(mousePosition - transform.position, 1);
 
             if (m.leftButton.wasPressedThisFrame) PrimaryUse = true;
             if (m.rightButton.wasPressedThisFrame) SecondaryUse = true;
@@ -128,10 +119,10 @@ namespace Crabs.Player
             Drop = false;
         }
 
-        public void SpawnWithUser(InputUser user)
+        public void SpawnWithUser(params InputDevice[] devices)
         {
             var instance = Instantiate(this);
-            user.AssociateActionsWithUser(instance.inputAsset);
+            instance.inputAsset.devices = devices;
         }
     }
 }

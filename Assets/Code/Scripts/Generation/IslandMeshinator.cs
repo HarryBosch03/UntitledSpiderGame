@@ -1,15 +1,15 @@
-using System;
 using System.Collections.Generic;
+using Crabs.Player;
 using UnityEngine;
 using UnityEngine.Rendering;
 
 namespace Crabs.Generation
 {
-    [RequireComponent(typeof(IslandGenerator))]
     [RequireComponent(typeof(MeshFilter))]
-    public class IslandMeshinator : MonoBehaviour
+    public class IslandMeshinator : MonoBehaviour, IDamagable
     {
         [SerializeField] private bool generateEditor;
+        [SerializeField] private float terrainSoftness = 1.0f;
 
         private IslandGenerator generator;
         private MapData mapData;
@@ -17,16 +17,15 @@ namespace Crabs.Generation
         private CustomCollider2D collider;
         private Mesh mesh;
         private PhysicsShapeGroup2D shape;
+        private bool dirty;
 
         private Texture2D mapTexture;
 
-        private List<Vector3> vertices;
-        private List<Color> vertexColors;
-        private List<Vector2> uvs;
-        private List<int> tris;
+        private List<Tile> tiles = new();
 
         private void Awake()
         {
+            Initialize();
             GenerateMesh();
         }
 
@@ -35,110 +34,152 @@ namespace Crabs.Generation
             if (!generateEditor) return;
 
             generateEditor = false;
+            Initialize();
             GenerateMesh();
         }
 
         private void Initialize()
         {
-            generator = GetComponent<IslandGenerator>();
+            generator = GetComponentInParent<IslandGenerator>();
             mapData = generator.GenerateMap();
 
             meshFilter = GetComponent<MeshFilter>();
 
-            if (!mesh)
-            {
-                mesh = meshFilter.sharedMesh ? meshFilter.sharedMesh : new Mesh();
-                mesh.name = "[PROC] IslandMeshinator.Mesh";
-            }
+            if (mesh) DestroyImmediate(mesh);
+
+            mesh = new Mesh();
+            mesh.name = "[PROC] IslandMeshinator.Mesh";
 
             meshFilter.sharedMesh = mesh;
-            vertices = new List<Vector3>();
-            vertexColors = new List<Color>();
-            tris = new List<int>();
-            uvs = new List<Vector2>();
-
-            shape = new PhysicsShapeGroup2D();
         }
 
         private void GenerateMesh()
         {
-            Initialize();
-
+            shape = new PhysicsShapeGroup2D();
             mapData.Enumerate((x, y, _) =>
             {
-                if (x == mapData.width - 1) return;
-                if (y == mapData.height - 1) return;
+                var tile = new Tile(x, y, 0);
+                UpdateTile(tile);
+                tiles.Add(tile);
+            });
+            Recompile();
+        }
 
-                var weights = new[]
-                {
-                    mapData[x, y],
-                    mapData[x + 1, y],
-                    mapData[x + 1, y + 1],
-                    mapData[x, y + 1],
-                };
+        private void Recompile()
+        {
+            var vertexCount = 0;
+            var triCount = 0;
+            shape = new PhysicsShapeGroup2D();
 
-                var config = 0;
-                for (var i = 0; i < 4; i++)
+            foreach (var e in tiles)
+            {
+                var c = MarchingSquaresIndices[e.config].Length;
+                vertexCount += c;
+                if (c != 0) triCount += (c - 2) * 3;
+            }
+
+            var vertices = new Vector3[vertexCount];
+            var uvs = new Vector2[vertexCount];
+            var colors = new Color[vertexCount];
+
+            var tris = new int[triCount];
+
+            var vertexBasis = 0;
+            var trisHead = 0;
+
+            for (var i = 0; i < tiles.Count; i++)
+            {
+                var tile = tiles[i];
+                var table = MarchingSquaresIndices[tile.config];
+                for (var j = 0; j < table.Length; j++)
                 {
-                    if (weights[i] < 0.0f) config |= 0b1 << i;
+                    var tableIndex = table[^(1 + j)];
+                    var interpolation = MarchingSquaresVertices[tableIndex];
+                    var vertex = (Vector3)(new Vector2(tile.x, tile.y) + interpolation) * mapData.unitScale;
+                    vertices[vertexBasis + j] = vertex;
+                    uvs[vertexBasis + j] = interpolation;
+                    colors[vertexBasis + j] = new Color(tile.x / (mapData.width - 1.0f), tile.y / (mapData.height - 1.0f), 0, 0);
                 }
 
-                var triTable = MarchingSquaresIndices[config];
-                var basis = vertices.Count;
-                for (var i0 = triTable.Length - 1; i0 >= 0; i0--)
+                for (var j = 0; j < table.Length - 2; j++)
                 {
-                    var i1 = triTable[i0];
-                    var interpolation = MarchingSquaresVertices[i1];
-                    var vertex = new Vector2(x, y) + interpolation;
-                    vertices.Add(vertex * mapData.unitScale);
-
-                    var weight = InterpolateOverCell(weights[0], weights[1], weights[3], weights[2], interpolation, Mathf.Lerp);
-                    vertexColors.Add(WeightToColor(weight));
-
-                    uvs.Add(new Vector2(vertex.x / mapData.width, vertex.y / mapData.height));
+                    tris[trisHead++] = vertexBasis;
+                    tris[trisHead++] = vertexBasis + j + 1;
+                    tris[trisHead++] = vertexBasis + j + 2;
                 }
 
-                for (var i = 0; i < triTable.Length - 2; i++)
-                {
-                    tris.Add(basis);
-                    tris.Add(basis + i + 1);
-                    tris.Add(basis + i + 2);
-                }
-
-                var edgeTable = MarchingSquaresEdges[config];
+                var edgeTable = MarchingSquaresEdges[tile.config];
                 if (edgeTable.Length >= 2)
                 {
                     var edges = new List<Vector2>();
-                    foreach (var i in edgeTable)
+                    foreach (var e in edgeTable)
                     {
-                        var v = new Vector2(x, y) + MarchingSquaresVertices[i];
+                        var v = new Vector2(tile.x, tile.y) + MarchingSquaresVertices[e];
                         edges.Add(v * mapData.unitScale);
                     }
 
                     shape.AddEdges(edges);
                 }
-            });
+
+                vertexBasis += table.Length;
+            }
 
             mesh.Clear();
             mesh.indexFormat = IndexFormat.UInt32;
             mesh.SetVertices(vertices);
+            mesh.SetColors(colors);
             mesh.SetTriangles(tris, 0);
-            mesh.SetColors(vertexColors);
             mesh.SetUVs(0, uvs);
             mesh.RecalculateBounds();
 
             SetCollider();
         }
 
-        private Color WeightToColor(float weight)
+        private Tile FindTile(int x, int y)
         {
-            var value = Mathf.Atan(weight) / Mathf.PI + 0.5f;
-            return new Color(value, value, value, 1.0f);
+            foreach (var e in tiles)
+            {
+                if (e.x == x && e.y == y) return e;
+            }
+
+            return null;
         }
 
-        private T InterpolateOverCell<T>(T a, T b, T c, T d, Vector2 interpolation, Func<T, T, float, T> lerp)
+        private void UpdateTiles(int xl, int yl, int xu, int yu)
         {
-            return lerp(lerp(a, b, interpolation.x), lerp(c, d, interpolation.x), interpolation.y);
+            for (var x = xl; x <= xu; x++)
+            for (var y = yl; y <= yu; y++)
+            {
+                UpdateTile(FindTile(x, y));
+            }
+            dirty = true;
+        }
+
+        private void UpdateTile(Tile tile)
+        {
+            if (tile == null) return;
+            
+            var x = tile.x;
+            var y = tile.y;
+
+            if (x == mapData.width - 1) return;
+            if (y == mapData.height - 1) return;
+
+            var weights = new[]
+            {
+                mapData[x, y],
+                mapData[x + 1, y],
+                mapData[x + 1, y + 1],
+                mapData[x, y + 1],
+            };
+
+            var config = 0;
+            for (var i = 0; i < 4; i++)
+            {
+                if (weights[i] < 0.0f) config |= 0b1 << i;
+            }
+
+            tile.config = config;
         }
 
         private void SetCollider()
@@ -147,6 +188,31 @@ namespace Crabs.Generation
             if (!collider) return;
 
             collider.SetCustomShapes(shape);
+        }
+
+        private void FixedUpdate()
+        {
+            if (dirty)
+            {
+                dirty = false;
+                mapData.Apply();
+                Recompile();
+            }
+        }
+
+        public void Damage(int damage, Vector2 point, Vector2 direction)
+        {
+            point /= mapData.unitScale;
+            Damage(damage, Mathf.FloorToInt(point.x), Mathf.FloorToInt(point.y));
+            Damage(damage, Mathf.CeilToInt(point.x), Mathf.FloorToInt(point.y));
+            Damage(damage, Mathf.FloorToInt(point.x), Mathf.CeilToInt(point.y));
+            Damage(damage, Mathf.CeilToInt(point.x), Mathf.CeilToInt(point.y));
+        }
+
+        public void Damage(int damage, int x, int y)
+        {
+            mapData[x, y] += damage * terrainSoftness;
+            UpdateTiles(x - 1, y - 1, x + 1, y + 1);
         }
 
         private static readonly Vector2[] MarchingSquaresVertices =
@@ -200,5 +266,18 @@ namespace Crabs.Generation
             new int [] { 7, 1 },        // 14
             new int [] { },             // 14
         };
+
+        public class Tile
+        {
+            public int x, y;
+            public int config;
+
+            public Tile(int x, int y, int config)
+            {
+                this.x = x;
+                this.y = y;
+                this.config = config;
+            }
+        }
     }
 }

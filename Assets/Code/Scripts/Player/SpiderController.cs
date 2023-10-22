@@ -123,7 +123,7 @@ namespace Crabs.Player
 
         private void UpdateLegs()
         {
-            ReachVector = Input.ReachDirection * LegTotalLength;
+            ReachVector = Input.ReachVector * LegTotalLength;
 
             var legsAnchored = 0;
             foreach (var leg in legs)

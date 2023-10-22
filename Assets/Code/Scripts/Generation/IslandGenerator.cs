@@ -42,7 +42,7 @@ namespace Crabs.Generation
                 map[x, y] = value;
             }
 
-            return map;
+            return map.Apply();
         }
     }
 }

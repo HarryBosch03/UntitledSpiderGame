@@ -1,5 +1,7 @@
 using System;
+using Crabs.Player;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Crabs.Extras
 {
@@ -43,7 +45,13 @@ namespace Crabs.Extras
             if (hit)
             {
                 transform.position = hit.point;
-                    
+
+                var damageable = hit.collider.GetComponentInParent<IDamagable>();
+                if ((Object)damageable)
+                {
+                    damageable.Damage(damage, hit.point, velocity.normalized);
+                }
+                
                 hitFX.SetActive(true);
                 hitFX.transform.SetParent(null);
                 Destroy(gameObject);

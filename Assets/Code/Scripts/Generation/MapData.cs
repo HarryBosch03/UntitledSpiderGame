@@ -1,4 +1,7 @@
 using System;
+using UnityEngine;
+using UnityEngine.Experimental.Rendering;
+using Object = UnityEngine.Object;
 
 namespace Crabs.Generation
 {
@@ -8,7 +11,11 @@ namespace Crabs.Generation
         public readonly int width;
         public readonly int height;
 
-        public float[,] weights;
+        public float[] weights;
+        public Texture2D texture;
+        private static readonly int MapWeights = Shader.PropertyToID("_MapWeights");
+        private static readonly int MapWidth = Shader.PropertyToID("_MapWidth");
+        private static readonly int MapHeight = Shader.PropertyToID("_MapHeight");
 
         public MapData(int width, int height, float unitScale)
         {
@@ -16,13 +23,34 @@ namespace Crabs.Generation
             this.height = height;
             this.unitScale = unitScale;
 
-            weights = new float[width, height];
+            weights = new float[width * height];
+        }
+
+        public MapData Apply()
+        {
+            if (texture) Object.DestroyImmediate(texture);
+
+            texture = new Texture2D(width, height, DefaultFormat.HDR, TextureCreationFlags.None);
+            texture.hideFlags = HideFlags.HideAndDontSave;
+
+            for (var x = 0; x < width; x++)
+            for (var y = 0; y < height; y++)
+            {
+                texture.SetPixel(x, y, Color.white * -this[x, y]);
+            }
+            
+            texture.Apply();
+            
+            Shader.SetGlobalTexture(MapWeights, texture);
+            Shader.SetGlobalInt(MapWidth, width);
+            Shader.SetGlobalInt(MapHeight, height);
+            return this;
         }
 
         public float this[int x, int y]
         {
-            get => weights[x, y];
-            set => weights[x, y] = value;
+            get => weights[x + y * width];
+            set => weights[x + y * width] = value;
         }
 
         public void Enumerate(Action<int, int, float> callback)
@@ -30,7 +58,7 @@ namespace Crabs.Generation
             for (var x = 0; x < width; x++)
             for (var y = 0; y < height; y++)
             {
-                callback(x, y, weights[x, y]);
+                callback(x, y, this[x, y]);
             }
         }
     }

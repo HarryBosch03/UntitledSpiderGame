@@ -27,7 +27,7 @@
 
 			struct Varyings
 			{
-				float2 uv : TEXCOORD0;
+				float2 uv0 : TEXCOORD0;
 				float4 vertex : SV_POSITION;
 			};
 
@@ -35,7 +35,7 @@
 			{
 				Varyings output;
 				output.vertex = TransformObjectToHClip(input.vertex.xyz);
-				output.uv = input.uv;
+				output.uv0 = input.uv;
 				return output;
 			}
 
@@ -48,7 +48,7 @@
 			
 			half4 frag (Varyings input) : SV_Target
 			{
-				half4 col = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, float2(_Index * _MainTex_TexelSize.x, input.uv.y));
+				half4 col = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, float2(_Index * _MainTex_TexelSize.x, input.uv0.y));
 				return col;
 			}
 			ENDHLSL
