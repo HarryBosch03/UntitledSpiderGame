@@ -5,8 +5,8 @@ namespace Crabs.Generation
     [SelectionBase, DisallowMultipleComponent]
     public sealed class IslandGenerator : MonoBehaviour
     {
-        [SerializeField] private int width;
-        [SerializeField] private int height;
+        public int width;
+        public int height;
         [SerializeField] private float unitScale = 1.0f;
         [SerializeField] private float noiseAmplitude;
         [SerializeField] private AnimationCurve heightCurve = AnimationCurve.Constant(0.0f, 1.0f, 1.0f);

@@ -86,7 +86,7 @@ Material:
     m_Colors:
     - _AccentColor: {r: 0.9811321, g: 0.324467, b: 0.03147021, a: 1}
     - _Color: {r: 0.16981131, g: 0.16981131, b: 0.16981131, a: 1}
-    - _ColorHigh: {r: 0.26415092, g: 0.26415092, b: 0.26415092, a: 1}
+    - _ColorHigh: {r: 0.16037738, g: 0.16037738, b: 0.16037738, a: 1}
     - _ColorLow: {r: 0.11320752, g: 0.11320752, b: 0.11320752, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
   m_BuildTextureStacks: []

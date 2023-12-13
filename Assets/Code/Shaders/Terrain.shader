@@ -57,7 +57,8 @@
 			{
 				half4 sample = SAMPLE_TEXTURE2D(_MapWeights, sampler_MapWeights, input.uv1);
 
-				return float4(abs(sample.rrr), 1.0);
+				return _ColorHigh;
+				return float4(lerp(_ColorLow, _ColorHigh, saturate(exp(30 * -(sample * sample)))).rgb, 1.0);
 			}
 			ENDHLSL
 		}

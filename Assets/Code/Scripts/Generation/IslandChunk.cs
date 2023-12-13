@@ -6,10 +6,11 @@ using UnityEngine.Rendering;
 namespace Crabs.Generation
 {
     [RequireComponent(typeof(MeshFilter))]
-    public class IslandMeshinator : MonoBehaviour, IDamagable
+    public class IslandChunk : MonoBehaviour, IDamagable
     {
-        [SerializeField] private bool generateEditor;
         [SerializeField] private float terrainSoftness = 1.0f;
+        public Vector2Int min = Vector2Int.one;
+        public Vector2Int max = Vector2Int.one * 64;
 
         private IslandGenerator generator;
         private MapData mapData;
@@ -19,29 +20,19 @@ namespace Crabs.Generation
         private PhysicsShapeGroup2D shape;
         private bool dirty;
 
-        private Texture2D mapTexture;
+        private Dictionary<Vector2Int, Tile> tiles = new();
 
-        private List<Tile> tiles = new();
-
-        private void Awake()
+        public void Generate(MapData mapData)
         {
+            this.mapData = mapData;
+            
             Initialize();
-            GenerateMesh();
-        }
-
-        private void OnValidate()
-        {
-            if (!generateEditor) return;
-
-            generateEditor = false;
-            Initialize();
-            GenerateMesh();
+            GenerateTerrain();
         }
 
         private void Initialize()
         {
-            generator = GetComponentInParent<IslandGenerator>();
-            mapData = generator.GenerateMap();
+            tiles.Clear();
 
             meshFilter = GetComponent<MeshFilter>();
 
@@ -53,19 +44,23 @@ namespace Crabs.Generation
             meshFilter.sharedMesh = mesh;
         }
 
-        private void GenerateMesh()
+        private void GenerateTerrain()
         {
-            shape = new PhysicsShapeGroup2D();
-            mapData.Enumerate((x, y, _) =>
+            for (var x = min.x; x < max.x; x++)
+            for (var y = min.y; y < max.y; y++)
             {
-                var tile = new Tile(x, y, 0);
-                UpdateTile(tile);
-                tiles.Add(tile);
-            });
-            Recompile();
+                if (x < 0 || x >= mapData.width) continue;
+                if (y < 0 || y >= mapData.height) continue;
+                
+                var v = mapData[x, y];
+                if (v > 0.0f) continue;   
+                var tile = new Tile(x, y);
+                tiles.Add(new Vector2Int(x, y), tile);
+            }
+            GenerateMesh();
         }
 
-        private void Recompile()
+        private void GenerateMesh()
         {
             var vertexCount = 0;
             var triCount = 0;
@@ -73,7 +68,8 @@ namespace Crabs.Generation
 
             foreach (var e in tiles)
             {
-                var c = MarchingSquaresIndices[e.config].Length;
+                var config = GetTileConfig(e.Key);
+                var c = MarchingSquaresIndices[config].Length;
                 vertexCount += c;
                 if (c != 0) triCount += (c - 2) * 3;
             }
@@ -87,18 +83,20 @@ namespace Crabs.Generation
             var vertexBasis = 0;
             var trisHead = 0;
 
-            for (var i = 0; i < tiles.Count; i++)
+            foreach (var keyValuePair in tiles)
             {
-                var tile = tiles[i];
-                var table = MarchingSquaresIndices[tile.config];
+                var key = keyValuePair.Key;
+                
+                var config = GetTileConfig(key);
+                var table = MarchingSquaresIndices[config];
                 for (var j = 0; j < table.Length; j++)
                 {
                     var tableIndex = table[^(1 + j)];
                     var interpolation = MarchingSquaresVertices[tableIndex];
-                    var vertex = (Vector3)(new Vector2(tile.x, tile.y) + interpolation) * mapData.unitScale;
+                    var vertex = (Vector3)(new Vector2(key.x, key.y) + interpolation) * mapData.unitScale;
                     vertices[vertexBasis + j] = vertex;
                     uvs[vertexBasis + j] = interpolation;
-                    colors[vertexBasis + j] = new Color(tile.x / (mapData.width - 1.0f), tile.y / (mapData.height - 1.0f), 0, 0);
+                    colors[vertexBasis + j] = new Color(key.x / (mapData.width - 1.0f), key.y / (mapData.height - 1.0f), 0, 0);
                 }
 
                 for (var j = 0; j < table.Length - 2; j++)
@@ -108,17 +106,17 @@ namespace Crabs.Generation
                     tris[trisHead++] = vertexBasis + j + 2;
                 }
 
-                var edgeTable = MarchingSquaresEdges[tile.config];
+                var edgeTable = MarchingSquaresEdges[config];
                 if (edgeTable.Length >= 2)
                 {
-                    var edges = new List<Vector2>();
+                    var polygon = new List<Vector2>();
                     foreach (var e in edgeTable)
                     {
-                        var v = new Vector2(tile.x, tile.y) + MarchingSquaresVertices[e];
-                        edges.Add(v * mapData.unitScale);
+                        var v = new Vector2(key.x, key.y) + MarchingSquaresVertices[e];
+                        polygon.Add(v * mapData.unitScale);
                     }
 
-                    shape.AddEdges(edges);
+                    shape.AddPolygon(polygon);
                 }
 
                 vertexBasis += table.Length;
@@ -135,35 +133,13 @@ namespace Crabs.Generation
             SetCollider();
         }
 
-        private Tile FindTile(int x, int y)
+        private int GetTileConfig(Vector2Int key)
         {
-            foreach (var e in tiles)
-            {
-                if (e.x == x && e.y == y) return e;
-            }
+            var x = key.x;
+            var y = key.y;
 
-            return null;
-        }
-
-        private void UpdateTiles(int xl, int yl, int xu, int yu)
-        {
-            for (var x = xl; x <= xu; x++)
-            for (var y = yl; y <= yu; y++)
-            {
-                UpdateTile(FindTile(x, y));
-            }
-            dirty = true;
-        }
-
-        private void UpdateTile(Tile tile)
-        {
-            if (tile == null) return;
-            
-            var x = tile.x;
-            var y = tile.y;
-
-            if (x == mapData.width - 1) return;
-            if (y == mapData.height - 1) return;
+            if (x == mapData.width - 1) return 0;
+            if (y == mapData.height - 1) return 0;
 
             var weights = new[]
             {
@@ -179,7 +155,7 @@ namespace Crabs.Generation
                 if (weights[i] < 0.0f) config |= 0b1 << i;
             }
 
-            tile.config = config;
+            return config;
         }
 
         private void SetCollider()
@@ -196,7 +172,7 @@ namespace Crabs.Generation
             {
                 dirty = false;
                 mapData.Apply();
-                Recompile();
+                GenerateMesh();
             }
         }
 
@@ -212,7 +188,7 @@ namespace Crabs.Generation
         public void Damage(int damage, int x, int y)
         {
             mapData[x, y] += damage * terrainSoftness;
-            UpdateTiles(x - 1, y - 1, x + 1, y + 1);
+            dirty = true;
         }
 
         private static readonly Vector2[] MarchingSquaresVertices =
@@ -249,34 +225,32 @@ namespace Crabs.Generation
 
         private static readonly int[][] MarchingSquaresEdges =
         {
-            new int [] { },             // 0
-            new int [] { 1, 7 },        // 1
-            new int [] { 3, 1 },        // 2
-            new int [] { 3, 7 },        // 3
-            new int [] { 3, 5 },        // 4
-            new int [] { 5, 7, 1, 3 },  // 5
-            new int [] { 5, 1 },        // 6
-            new int [] { 5, 7 },        // 7
-            new int [] { 5, 7 },        // 8
-            new int [] { 5, 1 },        // 9
-            new int [] { 5, 3, 1, 7 },  // 10
-            new int [] { 5, 3 },        // 11
-            new int [] { 7, 3 },        // 12
-            new int [] { 3, 1 },        // 13
-            new int [] { 7, 1 },        // 14
-            new int [] { },             // 14
+            new int [] { },                  // 0
+            new int [] { 0, 1, 7 },          // 1
+            new int [] { 1, 2, 3 },          // 2
+            new int [] { 0, 2, 3, 7 },       // 3
+            new int [] { 3, 4, 5 },          // 4
+            new int [] { 0, 1, 3, 4, 5, 7 }, // 5
+            new int [] { 1, 2, 4, 5 },       // 6
+            new int [] { 0, 2, 4, 5, 7 },    // 7
+            new int [] { 7, 5, 6 },          // 8
+            new int [] { 0, 1, 5, 6 },       // 9
+            new int [] { 1, 2, 3, 5, 6, 7 }, // 10
+            new int [] { 0, 2, 3, 5, 6 },    // 11
+            new int [] { 7, 3, 4, 6 },       // 12
+            new int [] { 0, 1, 3, 4, 6 },    // 13
+            new int [] { 1, 2, 4, 6, 7 },    // 14
+            new int [] { 0, 2, 4, 6 },       // 15
         };
 
         public class Tile
         {
             public int x, y;
-            public int config;
 
-            public Tile(int x, int y, int config)
+            public Tile(int x, int y)
             {
                 this.x = x;
                 this.y = y;
-                this.config = config;
             }
         }
     }
