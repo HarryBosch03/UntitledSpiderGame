@@ -20,6 +20,7 @@ namespace Crabs.Player
         private Camera mainCamera;
 
         private InputActionReference moveAction;
+        private InputActionReference jumpAction;
         private InputActionReference reachAction;
         private InputActionReference primaryUseAction;
         private InputActionReference secondaryUseAction;
@@ -34,6 +35,7 @@ namespace Crabs.Player
         public bool SecondaryUse { get; set; }
         public bool Drop { get; set; }
         public bool Dance { get; set; }
+        public bool Jump { get; set; }
 
         public static readonly List<SpiderInput> All = new();
         
@@ -43,6 +45,7 @@ namespace Crabs.Player
             inputAsset = Instantiate(inputAsset);
 
             moveAction = bind("Move");
+            jumpAction = bind("Jump");
             reachAction = bind("Reach");
             primaryUseAction = bind("Use0");
             secondaryUseAction = bind("Use1");
@@ -82,6 +85,7 @@ namespace Crabs.Player
             SecondaryUse = secondaryUseAction.Flag(SecondaryUse);
             Drop = dropAction.Flag(Drop);
             Dance = danceAction.State();
+            Jump = jumpAction.Flag(Jump);
 
             DoMouseInput();
         }
@@ -117,12 +121,14 @@ namespace Crabs.Player
             PrimaryUse = false;
             SecondaryUse = false;
             Drop = false;
+            Jump = false;
         }
 
-        public void SpawnWithUser(params InputDevice[] devices)
+        public SpiderInput SpawnWithUser(params InputDevice[] devices)
         {
             var instance = Instantiate(this);
             instance.inputAsset.devices = devices;
+            return instance;
         }
     }
 }

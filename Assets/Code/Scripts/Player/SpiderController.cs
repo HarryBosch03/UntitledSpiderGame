@@ -9,6 +9,8 @@ namespace Crabs.Player
     [SelectionBase, DisallowMultipleComponent]
     public sealed class SpiderController : MonoBehaviour
     {
+        private const float IgnoreGroundAfterJumpTime = 0.15f;
+        
         [SerializeField] private float moveSpeed = 10.0f;
         [SerializeField] private float accelerationTime = 0.1f;
 
@@ -18,6 +20,7 @@ namespace Crabs.Player
         [Space]
         [SerializeField] private float rotationSpring = 0.2f;
         [SerializeField] private float rotationDamping = 0.05f;
+        [SerializeField] private float jumpForce = 25.0f;
 
         [Space]
         [Range(0.0f, 1.0f)] public float legSmoothing = 0.3f;
@@ -26,10 +29,12 @@ namespace Crabs.Player
 
         private const int LegCastLayerMask = 0b001111111;
         
-        private Camera mainCam;
-
         private SpiderState currentState;
+        private float lastJumpTime;
 
+        public static readonly List<SpiderController> All = new();
+        public static Action<SpiderController> SpiderDiedEvent;
+        
         public Vector2 GroundPoint { get; private set; }
         public SpiderInput Input { get; private set; }
         public Rigidbody2D Body { get; private set; }
@@ -55,8 +60,6 @@ namespace Crabs.Player
         {
             Input = GetComponent<SpiderInput>();
             Body = GetComponent<Rigidbody2D>();
-
-            mainCam = Camera.main;
 
             var model = transform.Find("Model");
             butt = model.Find("Butt");
@@ -87,6 +90,17 @@ namespace Crabs.Player
             LegTotalLength = LegUpperLength + LegLowerLength;
         }
 
+        private void OnEnable()
+        {
+            All.Add(this);
+        }
+
+        private void OnDisable()
+        {
+            All.Remove(this);
+            SpiderDiedEvent?.Invoke(this);
+        }
+
         private void Start()
         {
             ChangeState(new SpiderMoveState());
@@ -102,11 +116,30 @@ namespace Crabs.Player
             Cast();
             UpdateLegs();
             UpdateDirection();
+            Jump();
 
             currentState.FixedUpdate(this);
 
-            UpdateCamera();
             Input.ResetTriggers();
+        }
+
+        private void Jump()
+        {
+            if (Input.Jump && Anchored)
+            {
+                Vector2 direction;
+                if (Input.Reaching) direction = Input.ReachVector;
+                else if (Input.MoveDirection.magnitude > 0.5f) direction = Input.MoveDirection;
+                else direction = transform.up;
+
+                var dot = Vector2.Dot(transform.up, direction);
+                if (dot < 0.0f) direction += (Vector2)transform.up * -dot * 2.0f;
+
+                var force = direction.normalized * jumpForce;
+                Body.AddForce(force - Body.velocity, ForceMode2D.Impulse);
+                
+                lastJumpTime = Time.time;
+            }
         }
 
         private void UpdateDirection()
@@ -128,7 +161,7 @@ namespace Crabs.Player
             var legsAnchored = 0;
             foreach (var leg in legs)
             {
-                leg.FixedUpdate(this);
+                leg.FixedUpdate(this, Time.time - lastJumpTime < IgnoreGroundAfterJumpTime);
                 if (leg.anchored) legsAnchored++;
             }
 
@@ -181,17 +214,6 @@ namespace Crabs.Player
             if (currentState != null) currentState.Exit(this);
             currentState = newState;
             if (currentState != null) currentState.Enter(this);
-        }
-        
-        private void UpdateCamera()
-        {
-            var position = new Vector3
-            {
-                x = Body.position.x,
-                y = Body.position.y,
-                z = -10.0f,
-            };
-            mainCam.transform.position = Vector3.Lerp(position, mainCam.transform.position, cameraSmoothing);
         }
 
         private void OnDrawGizmos()

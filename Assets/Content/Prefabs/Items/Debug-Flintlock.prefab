@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 8870824600127790950}
   - component: {fileID: 8870824600127790951}
   m_Layer: 8
-  m_Name: Flintlock
+  m_Name: Debug-Flintlock
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -48,15 +48,15 @@ MonoBehaviour:
   position: {x: 0, y: 0}
   rotation: 0
   projectile: {fileID: 9092994082209271172, guid: feb55d0c82e05e04987ebc9d061c2e32, type: 3}
-  damage: 1
+  damage: 60
   muzzleSpeed: 200
-  ammo: 4
-  fireDelay: 0.2
+  ammo: -1
+  fireDelay: 0
   armBrace: 0.9
-  recoilImpulse: 40
+  recoilImpulse: 0
   recoilSpring: 300
   recoilDamper: 25
-  shootForce: 8
+  shootForce: 0
   muzzle: {fileID: 8953100327533001161}
   muzzleFlash: {fileID: 3213276520235633478, guid: a0905d4a4992be2489e1d026d5c506f1, type: 3}
   deadFlash: {fileID: 330285427401332882, guid: 0d8e9f1406d4b5a40af1dcd03b5b1413, type: 3}

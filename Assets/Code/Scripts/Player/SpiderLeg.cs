@@ -17,13 +17,14 @@ namespace Crabs.Player
         public Vector2 root, mid, tip;
         public Vector2 target;
         public Vector2 actual;
-        public Vector2 restPosition;
+        public Vector2 localRestPosition;
         public Vector2 anchoredPosition;
         public bool anchored;
 
         public bool controlled;
         public bool stepped;
         public Item heldItem;
+        public bool forceNoAnchor;
 
         public SpiderLeg(Transform upperLeg, Transform lowerLeg, int i, bool controlled)
         {
@@ -35,11 +36,12 @@ namespace Crabs.Player
             stepDust = tipTransform.GetComponentInChildren<ParticleSystem>();
 
             var a = (i * 90.0f + 45.0f) * Mathf.Deg2Rad;
-            restPosition = new Vector2(Mathf.Cos(a) * 2.0f, Mathf.Sin(a)).normalized;
+            localRestPosition = new Vector2(Mathf.Cos(a) * 2.0f, Mathf.Sin(a)).normalized;
         }
 
-        public void FixedUpdate(SpiderController spider)
+        public void FixedUpdate(SpiderController spider, bool forceNoAnchor)
         {
+            this.forceNoAnchor = forceNoAnchor;
             this.Spider = spider;
             root = spider.Body.position;
 
@@ -90,18 +92,26 @@ namespace Crabs.Player
 
         private void UpdateAnchor()
         {
+            var restPosition = Spider.Body.position + localRestPosition * Spider.LegTotalLength * 0.75f;
+
             if (Locked) return;
+            if (forceNoAnchor)
+            {
+                anchored = false;
+                anchoredPosition = restPosition;
+                return;
+            }
+            
             if (anchored)
             {
                 if ((anchoredPosition - Spider.Body.position).magnitude > Spider.LegTotalLength)
                 {
                     anchored = false;
                 }
-
                 return;
             }
 
-            anchoredPosition = Spider.Body.position + restPosition * Spider.LegTotalLength * 0.75f;
+            anchoredPosition = restPosition;
 
             var best = 0.2f;
             foreach (var cast in Spider.wallCasts)

@@ -78,6 +78,7 @@ Material:
     - _ShadingMin: 0.25
     - _ShadingNoise: 0
     - _ShadingOffset: 57.46
+    - _ShowDebug: 0
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
@@ -88,5 +89,6 @@ Material:
     - _Color: {r: 0.16981131, g: 0.16981131, b: 0.16981131, a: 1}
     - _ColorHigh: {r: 0.16037738, g: 0.16037738, b: 0.16037738, a: 1}
     - _ColorLow: {r: 0.11320752, g: 0.11320752, b: 0.11320752, a: 1}
+    - _Debug: {r: 1, g: 1, b: 1, a: 0}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
   m_BuildTextureStacks: []

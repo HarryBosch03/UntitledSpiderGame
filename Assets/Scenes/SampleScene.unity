@@ -303,7 +303,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   chunkPrefab: {fileID: 919913362840281266, guid: ecd6f9eeb2fcd754ca0ba6b2aec862c0, type: 3}
-  chunkSize: 64
+  chunkSize: 16
 --- !u!1 &367375239
 GameObject:
   m_ObjectHideFlags: 0
@@ -433,6 +433,7 @@ GameObject:
   - component: {fileID: 1018944002}
   - component: {fileID: 1018944004}
   - component: {fileID: 1018944003}
+  - component: {fileID: 1018944005}
   m_Layer: 0
   m_Name: Lava
   m_TagString: Untagged
@@ -505,37 +506,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1018944001}
   m_Mesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
---- !u!1 &1468990738
-GameObject:
+--- !u!114 &1018944005
+MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1468990739}
-  m_Layer: 0
-  m_Name: InputManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1468990739
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1468990738}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 6
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_GameObject: {fileID: 1018944001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e04c77b2081d2b04cbae03d877a2d0d1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  height: 2
 --- !u!1 &1506626613
 GameObject:
   m_ObjectHideFlags: 0
@@ -595,6 +578,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1589090689}
   - component: {fileID: 1589090688}
+  - component: {fileID: 1589090690}
   m_Layer: 0
   m_Name: Test Gamemode
   m_TagString: Untagged
@@ -615,6 +599,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   spiderPrefab: {fileID: 3373450816341298517, guid: ce0e604c60b205746b090841d21d2c79, type: 3}
+  respawnTime: 3
+  spawnMin: 20
+  spawnMax: 280
+  spawnHeight: 100
   joinAction:
     m_Name: Join
     m_Type: 0
@@ -640,13 +628,28 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1589090687}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.40414286, y: -0.14849609, z: -0.35759246}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1589090690
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1589090687}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ccbf2aaf42f79c84a85eef333bd7d442, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  smoothing: 0
+  padding: 15
+  minSize: 10
 --- !u!1001 &4586059208333485840
 PrefabInstance:
   m_ObjectHideFlags: 0

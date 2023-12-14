@@ -24,21 +24,18 @@ namespace Crabs.Generation
             this.unitScale = unitScale;
 
             weights = new float[width * height];
+            
+            texture = new Texture2D(width, height, DefaultFormat.HDR, TextureCreationFlags.None);
+            texture.hideFlags = HideFlags.HideAndDontSave;
+        }
+
+        ~MapData()
+        {
+            if (texture) Object.Destroy(texture);
         }
 
         public MapData Apply()
         {
-            if (texture) Object.DestroyImmediate(texture);
-
-            texture = new Texture2D(width, height, DefaultFormat.HDR, TextureCreationFlags.None);
-            texture.hideFlags = HideFlags.HideAndDontSave;
-
-            for (var x = 0; x < width; x++)
-            for (var y = 0; y < height; y++)
-            {
-                texture.SetPixel(x, y, Color.white * -this[x, y]);
-            }
-            
             texture.Apply();
             
             Shader.SetGlobalTexture(MapWeights, texture);
@@ -50,7 +47,11 @@ namespace Crabs.Generation
         public float this[int x, int y]
         {
             get => weights[x + y * width];
-            set => weights[x + y * width] = value;
+            set
+            {
+                weights[x + y * width] = value;
+                texture.SetPixel(x, y, Color.white * -value);
+            }
         }
 
         public void Enumerate(Action<int, int, float> callback)

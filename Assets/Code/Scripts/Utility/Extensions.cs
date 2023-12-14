@@ -33,5 +33,11 @@ namespace Crabs.Utility
             actionReference.Flag(ref flag);
             return flag;
         }
+        
+        public static T Find<T>(this Transform transform, string path)
+        {
+            var find = transform.Find(path);
+            return find ? find.GetComponent<T>() : default;
+        }
     }
 }

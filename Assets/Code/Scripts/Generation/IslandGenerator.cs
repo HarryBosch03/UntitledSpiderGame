@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace Crabs.Generation
@@ -43,6 +44,13 @@ namespace Crabs.Generation
             }
 
             return map.Apply();
+        }
+
+        private void OnDrawGizmosSelected()
+        {
+            Gizmos.color = Color.yellow;
+            var size = new Vector2(width, height) * unitScale;
+            Gizmos.DrawWireCube(size / 2.0f, size);
         }
     }
 }
