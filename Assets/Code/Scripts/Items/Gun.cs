@@ -1,14 +1,12 @@
 using Crabs.Extras;
 using Crabs.Utility;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace Crabs.Items
 {
     [SelectionBase, DisallowMultipleComponent]
     public sealed class Gun : Item
     {
-        
         [SerializeField] private Projectile projectile;
         [SerializeField] private int damage = 60;
         [SerializeField] private float muzzleSpeed = 200;
@@ -42,7 +40,7 @@ namespace Crabs.Items
             base.FixedUpdate();
         }
 
-        public override void PrimaryUse()
+        public override void PrimaryUse(GameObject user)
         {
             if (Time.time - lastFireTime < fireDelay) return;
             lastFireTime = Time.time;
@@ -53,7 +51,7 @@ namespace Crabs.Items
                 return;
             }
 
-            projectile.Spawn(transform, muzzleSpeed, damage);
+            projectile.Spawn(user, transform, muzzleSpeed, damage);
 
             var recoilDirection = (Binding.mid - Binding.tip).normalized;
             recoilForce += recoilDirection * recoilImpulse / Time.fixedDeltaTime;
@@ -64,7 +62,7 @@ namespace Crabs.Items
             Instantiate(muzzleFlash, muzzle.position, muzzle.rotation);
         }
 
-        public override void SecondaryUse()
+        public override void SecondaryUse(GameObject user)
         {
             
         }

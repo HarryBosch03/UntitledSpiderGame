@@ -33,18 +33,9 @@
                     "initialStateCheck": true
                 },
                 {
-                    "name": "Use0",
+                    "name": "Use",
                     "type": "Button",
                     "id": "2053a62e-e649-4fa2-a81a-c04f8048a0ca",
-                    "expectedControlType": "Button",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                },
-                {
-                    "name": "Use1",
-                    "type": "Button",
-                    "id": "2774b614-e90b-4652-baa2-8ed29ac7ca10",
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
@@ -54,15 +45,6 @@
                     "name": "Drop",
                     "type": "Button",
                     "id": "cc12ea11-3491-4144-8b88-e8aaa6d035d5",
-                    "expectedControlType": "Button",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                },
-                {
-                    "name": "Dance",
-                    "type": "Button",
-                    "id": "746484ae-cf14-4e75-afd7-be0e290df996",
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
@@ -77,7 +59,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "Use0",
+                    "action": "Use",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -88,29 +70,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "Use0",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "f3aa2c04-c2b0-493d-8e6c-8ebf86adecdc",
-                    "path": "<Gamepad>/leftTrigger",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Use1",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "21d32871-aa61-4313-8e0b-15e08bcc6edd",
-                    "path": "<Mouse>/rightButton",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Use1",
+                    "action": "Use",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -133,28 +93,6 @@
                     "processors": "",
                     "groups": "",
                     "action": "Drop",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "6ad789fc-c93a-4980-80f3-0d86a71b4363",
-                    "path": "<Gamepad>/dpad/up",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Dance",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "f4e0a2a5-ac22-4fe5-a144-fb24e35c6594",
-                    "path": "<Keyboard>/v",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Dance",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },

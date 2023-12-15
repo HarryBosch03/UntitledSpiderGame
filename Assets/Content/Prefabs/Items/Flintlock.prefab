@@ -49,7 +49,7 @@ MonoBehaviour:
   rotation: 0
   projectile: {fileID: 9092994082209271172, guid: feb55d0c82e05e04987ebc9d061c2e32, type: 3}
   damage: 1
-  muzzleSpeed: 200
+  muzzleSpeed: 40
   ammo: 4
   fireDelay: 0.2
   armBrace: 0.9

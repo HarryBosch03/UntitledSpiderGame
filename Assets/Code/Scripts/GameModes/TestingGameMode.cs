@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using Crabs.Player;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.Rendering;
 using Random = UnityEngine.Random;
 
 namespace Crabs.GameModes
@@ -13,7 +12,8 @@ namespace Crabs.GameModes
     [DisallowMultipleComponent]
     public sealed class TestingGameMode : GameMode
     {
-        [SerializeField] private SpiderInput spiderPrefab;
+        [SerializeField] private PlayerController playerControllerPrefab;
+        [SerializeField] private SpiderController spiderPrefab;
         [SerializeField] private float respawnTime;
         [SerializeField] private float spawnMin;
         [SerializeField] private float spawnMax;
@@ -28,7 +28,8 @@ namespace Crabs.GameModes
 
             joinAction.Enable();
             joinAction.started += JoinDevice;
-            SpiderController.SpiderDiedEvent += OnSpiderDied;
+
+            SpiderController.DiedEvent += OnSpiderDied;
         }
 
         protected override void OnDisable()
@@ -37,20 +38,45 @@ namespace Crabs.GameModes
 
             joinAction.started -= JoinDevice;
             joinAction.Disable();
-            SpiderController.SpiderDiedEvent -= OnSpiderDied;
+            
+            SpiderController.DiedEvent -= OnSpiderDied;
         }
 
         private void OnSpiderDied(SpiderController spider)
         {
-            StartCoroutine(Respawn(spider));
+            var controllingPlayer = (PlayerController)null;
+
+            foreach (var player in PlayerController.All)
+            {
+                if (player.ActiveController != spider) continue;
+
+                controllingPlayer = player;
+                break;
+            }
+
+            if (!controllingPlayer) return;
+
+            StartCoroutine(Respawn(controllingPlayer));
         }
 
-        private IEnumerator Respawn(SpiderController spider)
+        private IEnumerator Respawn(PlayerController player)
         {
             yield return new WaitForSeconds(respawnTime);
 
+            var spider = Instantiate(spiderPrefab);
             spider.transform.position = GetSpawnPoint();
             spider.gameObject.SetActive(true);
+            
+            player.AssignSpider(spider);
+        }
+
+        private void Update()
+        {
+            if (Keyboard.current.enterKey.wasPressedThisFrame)
+            {
+                var target = FindObjectOfType<SpiderHealth>();
+                target.Damage(9999, target.transform.position, Vector2.up);
+            }
         }
 
         public Vector2 GetSpawnPoint()
@@ -97,8 +123,13 @@ namespace Crabs.GameModes
 
         private void SpawnPlayer(params InputDevice[] devices)
         {
-            var instance = spiderPrefab.SpawnWithUser(devices);
-            instance.transform.position = GetSpawnPoint();
+            var pcInstance = Instantiate(playerControllerPrefab);
+            pcInstance.BindDevice(devices);
+            pcInstance.transform.position = GetSpawnPoint();
+
+            var sp = GetSpawnPoint();
+            var spiderInstance = Instantiate(spiderPrefab, sp, Quaternion.identity);
+            pcInstance.AssignSpider(spiderInstance);
         }
 
         private void OnDrawGizmosSelected()

@@ -39,6 +39,11 @@ namespace Crabs.Player
             localRestPosition = new Vector2(Mathf.Cos(a) * 2.0f, Mathf.Sin(a)).normalized;
         }
 
+        public void OnDisable()
+        {
+            if (heldItem) Object.Destroy(heldItem.gameObject);
+        }
+        
         public void FixedUpdate(SpiderController spider, bool forceNoAnchor)
         {
             this.forceNoAnchor = forceNoAnchor;
@@ -72,7 +77,7 @@ namespace Crabs.Player
             if (controlled && Spider.Reaching)
             {
                 anchored = false;
-                target = Spider.Body.position + Spider.Input.ReachVector * Spider.LegTotalLength;
+                target = Spider.Body.position + Spider.ReachVector * Spider.LegTotalLength;
                 Collide(ref target);
             }
             else
@@ -83,7 +88,7 @@ namespace Crabs.Player
 
         private void Collide(ref Vector2 end)
         {
-            var hit = Physics2D.Linecast(root, end);
+            var hit = Physics2D.Linecast(root, end, ~(0b1 << 7));
             if (hit)
             {
                 end = hit.point;
@@ -146,28 +151,19 @@ namespace Crabs.Player
             {
                 target = heldItem.ModifyReachPosition(target) ?? target;
 
-                if (Spider.Input.PrimaryUse)
+                if (Spider.Use)
                 {
-                    heldItem.PrimaryUse();
-                    Spider.Input.PrimaryUse = false;
+                    heldItem.PrimaryUse(Spider.gameObject);
                 }
 
-                if (Spider.Input.SecondaryUse)
-                {
-                    heldItem.SecondaryUse();
-                    Spider.Input.SecondaryUse = false;
-                }
-
-                if (Spider.Input.Drop)
-                {
-                    heldItem = heldItem.Dispose();
-                    Spider.Input.Drop = false;
-                }
+                // if (Spider.Drop)
+                // {
+                //     heldItem = heldItem.Dispose();
+                // }
             }
-            else if (Spider.Input.Drop)
+            else// if (Spider.Drop)
             {
                 if (Spider.spawnItem) heldItem = Spider.spawnItem.Instantiate(this);
-                Spider.Input.Drop = false;
             }
         }
 

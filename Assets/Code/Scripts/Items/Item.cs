@@ -40,8 +40,8 @@ namespace Crabs.Items
             transform.rotation = Quaternion.Euler(0.0f, 0.0f, rotation * Mathf.Rad2Deg);
         }
 
-        public abstract void PrimaryUse();
-        public abstract void SecondaryUse();
+        public abstract void PrimaryUse(GameObject user);
+        public abstract void SecondaryUse(GameObject user);
 
         public virtual Vector2? ModifyReachPosition(Vector2 reachPosition) => null;
         
