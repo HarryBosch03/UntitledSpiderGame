@@ -170,6 +170,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   width: 600
   height: 200
+  tile:
+    color: {r: 0.15686275, g: 0.15686275, b: 0.15686275, a: 1}
+    health: 1
   unitScale: 0.5
   noiseAmplitude: 0.89
   heightCurve:

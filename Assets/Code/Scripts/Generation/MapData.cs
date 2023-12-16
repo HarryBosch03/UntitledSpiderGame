@@ -1,4 +1,5 @@
 using System;
+using Crabs.Generation.Tiles;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 using Object = UnityEngine.Object;
@@ -11,7 +12,7 @@ namespace Crabs.Generation
         public readonly int width;
         public readonly int height;
 
-        public float[] weights;
+        public Tile[] tiles;
         public Texture2D texture;
         private static readonly int MapWeights = Shader.PropertyToID("_MapWeights");
         private static readonly int MapWidth = Shader.PropertyToID("_MapWidth");
@@ -22,8 +23,7 @@ namespace Crabs.Generation
             this.width = width;
             this.height = height;
             this.unitScale = unitScale;
-
-            weights = new float[width * height];
+            tiles = new Tile[width * height];
             
             texture = new Texture2D(width, height, DefaultFormat.HDR, TextureCreationFlags.None);
             texture.hideFlags = HideFlags.HideAndDontSave;
@@ -44,23 +44,32 @@ namespace Crabs.Generation
             return this;
         }
 
-        public float this[int x, int y]
+        public Tile this[int x, int y]
         {
-            get => weights[x + y * width];
+            get => tiles[x + y * width];
             set
             {
-                weights[x + y * width] = value;
-                texture.SetPixel(x, y, Color.white * -value);
+                tiles[x + y * width] = value;
+                texture.SetPixel(x, y, value?.color ?? Color.clear);
             }
         }
 
-        public void Enumerate(Action<int, int, float> callback)
+        public void Enumerate(Action<int, int, Tile> callback)
         {
             for (var x = 0; x < width; x++)
             for (var y = 0; y < height; y++)
             {
                 callback(x, y, this[x, y]);
             }
+        }
+
+        public void Damage(int damage, int x, int y)
+        {
+            var tile = this[x, y];
+            if (tile == null) return;
+            
+            tile.health -= damage;
+            if (tile.health <= 0) this[x, y] = null;
         }
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Crabs.Extras;
 using Crabs.Items;
 using UnityEngine;
 
@@ -27,9 +28,13 @@ namespace Crabs.Player
         [Range(0.0f, 1.0f)] public float legSmoothing = 0.3f;
         [SerializeField] [Range(0.0f, 1.0f)] private float bodyPartSmoothing = 0.8f;
 
-        private const int LegCastLayerMask = 0b001111111;
+        [Space]
+        [SerializeField] private Projectile web;
+        [SerializeField] private float webSpeed;
+        [SerializeField] private float webFireDelay;
         
         private float lastJumpTime;
+        private float lastWebTime;
         public static event Action<SpiderController> DiedEvent;
 
         public static readonly List<SpiderController> All = new();
@@ -41,6 +46,7 @@ namespace Crabs.Player
         public bool Use { get; set; }
         public bool Drop { get; set; }
         public bool Jump { get; set; }
+        public bool Web { get; set; }
         #endregion
         
         public Vector2 GroundPoint { get; private set; }
@@ -78,7 +84,7 @@ namespace Crabs.Player
                 legMids[i] = legRoots[i].GetChild(0);
                 legTips[i] = legMids[i].GetChild(0);
 
-                legs.Add(new SpiderLeg(legRoots[i], legMids[i], i, i == 0));
+                legs.Add(new SpiderLeg(this, legRoots[i], legMids[i], i, i == 0));
                 bodyParts.Add(new SpiderBodyPart(legRoots[i])
                 {
                     flip = false,
@@ -97,6 +103,8 @@ namespace Crabs.Player
         private void OnEnable()
         {
             All.Add(this);
+            
+            foreach (var leg in legs) leg.OnEnable();
         }
 
         private void OnDisable()
@@ -104,10 +112,7 @@ namespace Crabs.Player
             All.Remove(this);
             DiedEvent?.Invoke(this);
 
-            foreach (var leg in legs)
-            {
-                leg.OnDisable();
-            }
+            foreach (var leg in legs) leg.OnDisable();
         }
 
         private void FixedUpdate()
@@ -119,8 +124,18 @@ namespace Crabs.Player
             UpdateLegs();
             UpdateDirection();
             PerformJump();
+            FireWebs();
 
             ResetFlags();
+        }
+
+        private void FireWebs()
+        {
+            if (!Web) return;
+            if (Time.time - lastWebTime < webFireDelay) return;
+
+            web.Spawn(gameObject, transform.position, ReachVector, webSpeed, 0);
+            lastWebTime = Time.time;
         }
 
         private void ResetFlags()
@@ -148,6 +163,7 @@ namespace Crabs.Player
         private void UpdateDirection()
         {
             var groundVector = GroundPoint - Body.position;
+            groundVector = Vector2.Lerp(Vector2.up, groundVector, groundVector.magnitude);
             
             var facing = MoveDirection.x * -groundVector.y;
             if (Mathf.Abs(facing) > 0.2f) Direction = facing > 0.0f ? 1 : -1;
@@ -162,7 +178,7 @@ namespace Crabs.Player
             var legsAnchored = 0;
             foreach (var leg in legs)
             {
-                leg.FixedUpdate(this, Time.time - lastJumpTime < IgnoreGroundAfterJumpTime);
+                leg.FixedUpdate(Time.time - lastJumpTime < IgnoreGroundAfterJumpTime);
                 if (leg.anchored) legsAnchored++;
             }
 
@@ -202,7 +218,7 @@ namespace Crabs.Player
             {
                 var a = (i / (float)iterations) * Mathf.PI * 2.0f;
                 var v = new Vector2(Mathf.Cos(a), Mathf.Sin(a));
-                var hit = Physics2D.Raycast(Body.position, v, LegTotalLength, LegCastLayerMask);
+                var hit = Physics2D.Raycast(Body.position, v, LegTotalLength, SpiderLeg.LegMask);
                 if (!hit) continue;
                 
                 wallCasts.Add(hit);

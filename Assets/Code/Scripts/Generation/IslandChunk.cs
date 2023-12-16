@@ -1,14 +1,18 @@
 using System;
 using System.Collections.Generic;
+using Crabs.Generation.Tiles;
 using Crabs.Player;
 using UnityEngine;
 using UnityEngine.Rendering;
+using Random = System.Random;
 
 namespace Crabs.Generation
 {
     [RequireComponent(typeof(MeshFilter))]
     public class IslandChunk : MonoBehaviour, IDamagable
     {
+        public const float AlphaCutoff = 0.5f;
+
         [SerializeField] private float terrainSoftness = 1.0f;
         public Vector2Int min = Vector2Int.one;
         public Vector2Int max = Vector2Int.one * 64;
@@ -23,12 +27,11 @@ namespace Crabs.Generation
         private new Renderer renderer;
         private MaterialPropertyBlock materialProperties;
         private float debugTime;
-        
+
         public event Action HealthChangedEvent;
         public int CurrentHealth => int.MaxValue;
         public int MaxHealth => int.MaxValue;
 
-        private Dictionary<Vector2Int, Tile> tiles = new();
         public IslandChunkDistributor parent;
         public Vector2Int chunkKey;
 
@@ -66,13 +69,11 @@ namespace Crabs.Generation
             };
 
             Initialize();
-            GenerateTerrain();
+            GenerateMesh();
         }
 
         private void Initialize()
         {
-            tiles.Clear();
-
             meshFilter = GetComponent<MeshFilter>();
 
             if (mesh) DestroyImmediate(mesh);
@@ -81,23 +82,6 @@ namespace Crabs.Generation
             mesh.name = "[PROC] IslandMeshinator.Mesh";
 
             meshFilter.sharedMesh = mesh;
-        }
-
-        private void GenerateTerrain()
-        {
-            for (var x = min.x; x < max.x; x++)
-            for (var y = min.y; y < max.y; y++)
-            {
-                if (x < 0 || x >= mapData.width) continue;
-                if (y < 0 || y >= mapData.height) continue;
-
-                var v = mapData[x, y];
-                if (v > 0.0f) continue;
-                var tile = new Tile(x, y);
-                tiles.Add(new Vector2Int(x, y), tile);
-            }
-
-            GenerateMesh();
         }
 
         private void GenerateMesh()
@@ -128,6 +112,7 @@ namespace Crabs.Generation
             for (var y = min.y; y < max.y; y++)
             {
                 var key = new Vector2Int(x, y);
+                var color = getColor(x, y);
 
                 var config = GetTileConfig(key);
                 var table = MarchingSquaresIndices[config];
@@ -138,7 +123,7 @@ namespace Crabs.Generation
                     var vertex = (Vector3)(new Vector2(key.x, key.y) + interpolation) * mapData.unitScale;
                     vertices[vertexBasis + j] = vertex;
                     uvs[vertexBasis + j] = interpolation;
-                    colors[vertexBasis + j] = new Color(key.x / (mapData.width - 1.0f), key.y / (mapData.height - 1.0f), 0, 0);
+                    colors[vertexBasis + j] = color;
                 }
 
                 for (var j = 0; j < table.Length - 2; j++)
@@ -173,6 +158,35 @@ namespace Crabs.Generation
             mesh.RecalculateBounds();
 
             SetCollider();
+
+            Color getColor(int x, int y)
+            {
+                var tile = mapData[x, y];
+                if (tile != null) return tile.color;
+
+                var xEdge = x == mapData.width - 1;
+                var yEdge = y == mapData.height - 1;
+
+                if (!xEdge)
+                {
+                    tile = mapData[x + 1, y];
+                    if (tile != null) return tile.color;
+                }
+
+                if (!yEdge)
+                {
+                    tile = mapData[x, y + 1];
+                    if (tile != null) return tile.color;
+                }
+
+                if (!xEdge && !yEdge)
+                {
+                    tile = mapData[x + 1, y + 1];
+                    if (tile != null) return tile.color;
+                }
+
+                return Color.clear;
+            }
         }
 
         private int GetTileConfig(Vector2Int key)
@@ -183,7 +197,7 @@ namespace Crabs.Generation
             if (x == mapData.width - 1) return 0;
             if (y == mapData.height - 1) return 0;
 
-            var weights = new[]
+            var tiles = new[]
             {
                 mapData[x, y],
                 mapData[x + 1, y],
@@ -194,7 +208,7 @@ namespace Crabs.Generation
             var config = 0;
             for (var i = 0; i < 4; i++)
             {
-                if (weights[i] < 0.0f) config |= 0b1 << i;
+                if (tiles[i] != null) config |= 0b1 << i;
             }
 
             return config;
@@ -232,8 +246,20 @@ namespace Crabs.Generation
 
         public void Damage(int damage, int x, int y)
         {
-            mapData[x, y] += damage * terrainSoftness;
+            mapData.Damage(damage, x, y);
             MarkDirty(x, y);
+        }
+
+        public void SetTile(Tile tile, Vector2 point)
+        {
+            point /= mapData.unitScale;
+            var min = Vector2Int.FloorToInt(point);
+            var max = min + Vector2Int.one;
+
+            mapData[min.x, min.y] = new Tile(tile);
+            mapData[max.x, min.y] = new Tile(tile);
+            mapData[min.x, max.y] = new Tile(tile);
+            mapData[max.x, max.y] = new Tile(tile);
         }
 
         public void MarkDirty(int x, int y)
@@ -322,16 +348,5 @@ namespace Crabs.Generation
             new int[] { 1, 2, 4, 6, 7 }, // 14
             new int[] { 0, 2, 4, 6 }, // 15
         };
-
-        public class Tile
-        {
-            public int x, y;
-
-            public Tile(int x, int y)
-            {
-                this.x = x;
-                this.y = y;
-            }
-        }
     }
 }

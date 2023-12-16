@@ -4,15 +4,36 @@ using UnityEngine;
 
 namespace Crabs.Items
 {
+    [RequireComponent(typeof(Rigidbody2D))]
     [SelectionBase, DisallowMultipleComponent]
     public abstract class Item : MonoBehaviour
     {
+        private const float PhantomDespawnTime = 1.0f;
+        
         [HideInInspector] public Vector2 position;
         [HideInInspector] public float rotation;
+        [SerializeField] private float itemScale = 1.0f;
 
         private Transform model;
+        private Transform poof;
+        private Rigidbody2D body;
+        public bool phantomItem;
+        public float phantomDespawnTimer;
 
-        public SpiderLeg Binding { get; set; }
+        public SpiderLeg Binding { get; private set; }
+
+        private void Awake()
+        {
+            body = GetComponent<Rigidbody2D>();
+            poof = transform.Find("Poof");
+            if (poof) poof.gameObject.SetActive(false);
+
+            foreach (var t in GetComponentsInChildren<Transform>())
+            {
+                // 8: Item Layer
+                t.gameObject.layer = 8;
+            }
+        }
 
         protected virtual void Start()
         {
@@ -25,32 +46,48 @@ namespace Crabs.Items
             UpdatePosition();
 
             var flip = transform.up.y < 0.0f;
-            model.localScale = new Vector3(1.0f, flip ? -1.0f : 1.0f, 1.0f);
+            model.localScale = new Vector3(1.0f, flip ? -1.0f : 1.0f, 1.0f) * itemScale;
+
+            if (Binding == null && phantomItem)
+            {
+                phantomDespawnTimer += Time.deltaTime;
+                if (phantomDespawnTimer > PhantomDespawnTime)
+                {
+                    poof.gameObject.SetActive(true);
+                    poof.SetParent(null);
+                    Destroy(gameObject);
+                }
+            }
         }
 
+        public virtual void Bind(SpiderLeg binding)
+        {
+            Binding = binding;
+            body.isKinematic = binding != null;
+            if (binding == null)
+            {
+                body.rotation = 0.0f;
+            }
+        }
+        
         private void UpdatePosition()
         {
-            position = Binding.tip;
-            rotation = (Binding.tip - Binding.mid).ToAngle();
+            if (Binding != null)
+            {
+                position = Binding.tip;
+                rotation = (Binding.tip - Binding.mid).ToAngle();
 
-            position = ModifyPosition(position) ?? position;
-            rotation = ModifyRotation(rotation) ?? rotation;
-            
-            transform.position = position;
-            transform.rotation = Quaternion.Euler(0.0f, 0.0f, rotation * Mathf.Rad2Deg);
+                position = ModifyPosition(position) ?? position;
+                rotation = ModifyRotation(rotation) ?? rotation;
+
+                transform.position = position;
+                transform.rotation = Quaternion.Euler(0.0f, 0.0f, rotation * Mathf.Rad2Deg);
+            }
         }
 
-        public abstract void PrimaryUse(GameObject user);
-        public abstract void SecondaryUse(GameObject user);
+        public abstract void Use(GameObject user);
 
         public virtual Vector2? ModifyReachPosition(Vector2 reachPosition) => null;
-        
-        public Item Instantiate(SpiderLeg binding)
-        {
-            var instance = Instantiate(this);
-            instance.Binding = binding;
-            return instance;
-        }
 
         public Item Dispose()
         {

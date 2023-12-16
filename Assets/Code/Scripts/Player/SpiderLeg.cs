@@ -5,7 +5,11 @@ namespace Crabs.Player
 {
     public class SpiderLeg
     {
-        private const int IkIterations = 20;
+        public const int LegMask = 0b1 | (1 << 9);
+        
+        private const int IkIterations = 500;
+        private const float PickupRange = 3.0f;
+        private const float Smoothing = 0.4f;
 
         public Transform upperLeg, lowerLeg, tipTransform;
         public ParticleSystem stepDust;
@@ -15,8 +19,8 @@ namespace Crabs.Player
         public bool Locked { get; set; }
 
         public Vector2 root, mid, tip;
+        public Vector2 smoothedRoot, smoothedMid, smoothedTip;
         public Vector2 target;
-        public Vector2 actual;
         public Vector2 localRestPosition;
         public Vector2 anchoredPosition;
         public bool anchored;
@@ -26,8 +30,9 @@ namespace Crabs.Player
         public Item heldItem;
         public bool forceNoAnchor;
 
-        public SpiderLeg(Transform upperLeg, Transform lowerLeg, int i, bool controlled)
+        public SpiderLeg(SpiderController spider, Transform upperLeg, Transform lowerLeg, int i, bool controlled)
         {
+            Spider = spider;
             this.upperLeg = upperLeg;
             this.lowerLeg = lowerLeg;
             this.controlled = controlled;
@@ -39,23 +44,28 @@ namespace Crabs.Player
             localRestPosition = new Vector2(Mathf.Cos(a) * 2.0f, Mathf.Sin(a)).normalized;
         }
 
+        public void OnEnable()
+        {
+            if (controlled)
+            {
+                heldItem = Object.Instantiate(Spider.spawnItem);
+                heldItem.Bind(this);
+            }
+        }
+
         public void OnDisable()
         {
-            if (heldItem) Object.Destroy(heldItem.gameObject);
+            if (heldItem)
+            {
+                heldItem.Bind(null);
+                heldItem = null;
+            }
         }
         
-        public void FixedUpdate(SpiderController spider, bool forceNoAnchor)
+        public void FixedUpdate(bool forceNoAnchor)
         {
             this.forceNoAnchor = forceNoAnchor;
-            this.Spider = spider;
-            root = spider.Body.position;
-
-            actual = Vector3.Lerp(target, actual, spider.legSmoothing);
-            if ((target - actual).magnitude < 0.02f && !stepped)
-            {
-                stepDust.Play();
-                stepped = true;
-            }
+            root = Spider.Body.position;
 
             UpdateAnchor();
             UpdateTarget();
@@ -88,7 +98,7 @@ namespace Crabs.Player
 
         private void Collide(ref Vector2 end)
         {
-            var hit = Physics2D.Linecast(root, end, ~(0b1 << 7));
+            var hit = Physics2D.Linecast(root, end, LegMask);
             if (hit)
             {
                 end = hit.point;
@@ -153,27 +163,59 @@ namespace Crabs.Player
 
                 if (Spider.Use)
                 {
-                    heldItem.PrimaryUse(Spider.gameObject);
+                    heldItem.Use(Spider.gameObject);
                 }
 
-                // if (Spider.Drop)
-                // {
-                //     heldItem = heldItem.Dispose();
-                // }
+                if (Spider.Drop)
+                {
+                    heldItem.Bind(null);
+                    heldItem = null;
+                }
             }
-            else// if (Spider.Drop)
+            else if (Spider.Drop)
             {
-                if (Spider.spawnItem) heldItem = Spider.spawnItem.Instantiate(this);
+                PickupItem();
             }
+        }
+
+        private void PickupItem()
+        {
+            var center = (Vector2)Spider.transform.position;
+            var best = (Item)null;
+            foreach (var e in Physics2D.OverlapCircleAll(center, PickupRange))
+            {
+                var item = e.GetComponentInParent<Item>();
+                if (!item) continue;
+
+                if (!best)
+                {
+                    best = item;
+                    continue;
+                }
+
+                if (((Vector2)item.transform.position - center).magnitude < ((Vector2)best.transform.position - center).magnitude)
+                {
+                    best = item;
+                }
+            }
+
+            if (!best) return;
+
+            heldItem = best;
+            heldItem.Bind(this);
         }
 
         private void UpdateTransforms()
         {
-            upperLeg.position = new Vector3(root.x, root.y, upperLeg.position.z);
-            upperLeg.right = mid - root;
+            smoothedRoot = Vector2.Lerp(root, smoothedRoot, Smoothing);
+            smoothedMid = Vector2.Lerp(mid, smoothedMid, Smoothing);
+            smoothedTip = Vector2.Lerp(tip, smoothedTip, Smoothing);
+            
+            upperLeg.position = new Vector3(smoothedRoot.x, smoothedRoot.y, upperLeg.position.z);
+            upperLeg.right = smoothedMid - smoothedRoot;
 
-            lowerLeg.position = new Vector3(mid.x, mid.y, lowerLeg.position.z);
-            lowerLeg.right = tip - mid;
+            lowerLeg.position = new Vector3(smoothedMid.x, smoothedMid.y, lowerLeg.position.z);
+            lowerLeg.right = smoothedTip - smoothedMid;
         }
 
         private void IK()
@@ -185,7 +227,7 @@ namespace Crabs.Player
             var flipped = false;
             for (var i = 0; i < IkIterations; i++)
             {
-                tip = actual;
+                tip = target;
                 mid = (mid - tip).normalized * lowerLength + tip;
                 root = (root - mid).normalized * upperLength + mid;
 
@@ -204,10 +246,10 @@ namespace Crabs.Player
                 tip = va;
 
                 va = rootTarget;
-                vb = actual;
+                vb = target;
 
                 rootTarget = vb;
-                actual = va;
+                target = va;
 
                 var fa = upperLength;
                 var fb = lowerLength;
@@ -223,7 +265,7 @@ namespace Crabs.Player
         {
             if (Locked) return;
 
-            var up = (Spider.Body.position - Spider.GroundPoint).normalized;
+            var up = Spider.transform.up;
 
             var a = mid;
 

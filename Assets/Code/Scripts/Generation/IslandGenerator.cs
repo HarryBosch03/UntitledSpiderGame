@@ -1,4 +1,5 @@
 using System;
+using Crabs.Generation.Tiles;
 using UnityEngine;
 
 namespace Crabs.Generation
@@ -8,6 +9,7 @@ namespace Crabs.Generation
     {
         public int width;
         public int height;
+        public Tile tile;
         [SerializeField] private float unitScale = 1.0f;
         [SerializeField] private float noiseAmplitude;
         [SerializeField] private AnimationCurve heightCurve = AnimationCurve.Constant(0.0f, 1.0f, 1.0f);
@@ -40,7 +42,8 @@ namespace Crabs.Generation
                 var deadzone = this.deadzone.Evaluate(px);
                 value = Mathf.Lerp(0.1f, value, deadzone);
 
-                map[x, y] = value;
+                if (value > 0.0f) continue;
+                map[x, y] = new Tile(tile);
             }
 
             return map.Apply();

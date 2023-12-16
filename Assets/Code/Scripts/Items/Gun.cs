@@ -27,7 +27,12 @@ namespace Crabs.Items
         private Vector2 recoilVelocity;
         private Vector2 recoilForce;
         
-        public static bool InfiniteAmmo = true;
+        public static bool InfiniteAmmo = false;
+
+        private void OnEnable()
+        {
+            if (InfiniteAmmo) ammo = -1;
+        }
 
         protected override void FixedUpdate()
         {
@@ -40,31 +45,27 @@ namespace Crabs.Items
             base.FixedUpdate();
         }
 
-        public override void PrimaryUse(GameObject user)
+        public override void Use(GameObject user)
         {
             if (Time.time - lastFireTime < fireDelay) return;
             lastFireTime = Time.time;
 
-            if (ammo == 0 && !InfiniteAmmo)
+            if (ammo == 0)
             {
                 Instantiate(deadFlash, muzzle.position, muzzle.rotation);
                 return;
             }
 
-            projectile.Spawn(user, transform, muzzleSpeed, damage);
+            projectile.Spawn(user, transform.position, transform.right, muzzleSpeed, damage);
 
             var recoilDirection = (Binding.mid - Binding.tip).normalized;
             recoilForce += recoilDirection * recoilImpulse / Time.fixedDeltaTime;
             ammo--;
+            if (ammo == 0) phantomItem = true;
             
             Binding.Spider.Body.AddForce(recoilDirection * shootForce, ForceMode2D.Impulse);
 
             Instantiate(muzzleFlash, muzzle.position, muzzle.rotation);
-        }
-
-        public override void SecondaryUse(GameObject user)
-        {
-            
         }
 
         public override Vector2? ModifyReachPosition(Vector2 reachPosition) => (reachPosition - Binding.root) * armBrace + Binding.root + recoilPosition;

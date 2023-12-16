@@ -1,5 +1,5 @@
-using System;
 using Crabs.Player;
+using Crabs.Utility;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -7,71 +7,99 @@ namespace Crabs.Extras
 {
     public class Projectile : MonoBehaviour
     {
-        [SerializeField] private float maxDistance = 200.0f;
+        public const int ProjectileLayerMask = ~((1 << Web.WebLayer) | (1 << 8));
         
+        [SerializeField] private float maxDistance = 200.0f;
+
         public int damage;
 
-        private Vector2 velocity;
+        public Vector2 velocity;
         private Vector2 force;
-        private GameObject hitFX;
+        private Transform hitFX;
+        private ParticleSystem trail;
 
         private float distanceTraveled;
         private int ignoreShooterFrames = 3;
 
-        public GameObject Shooter;
+        private GameObject Shooter;
 
-        public Projectile Spawn(GameObject shooter, Transform muzzle, float muzzleSpeed, int damage)
+        public Projectile Spawn(GameObject shooter, Vector2 position, Vector2 direction, float muzzleSpeed, int damage)
         {
             var instance = Instantiate(this);
             instance.Shooter = shooter;
             instance.damage = damage;
-            instance.velocity = muzzle.right.normalized * muzzleSpeed;
-            instance.transform.position = muzzle.position;
+            instance.velocity = direction.normalized * muzzleSpeed;
+            instance.transform.position = position;
             return instance;
         }
 
         private void Awake()
         {
-            hitFX = transform.Find("HitFX").gameObject;
-            hitFX.SetActive(false);
+            hitFX = transform.Find("HitFX");
+            if (hitFX) hitFX.gameObject.SetActive(false);
+            
+            trail = transform.Find<ParticleSystem>("Trail");
         }
 
-        private void FixedUpdate()
+        protected virtual void FixedUpdate()
         {
             if (distanceTraveled > maxDistance)
             {
-                Destroy(gameObject);
+                Destroy();
                 return;
             }
-            
+
             var stepDistance = velocity.magnitude * Time.deltaTime * 1.05f;
-            var hit = Physics2D.Raycast(transform.position, velocity, stepDistance);
+            var hit = Physics2D.Raycast(transform.position, velocity, stepDistance, ProjectileLayerMask);
             if (ValidateHit(hit))
             {
-                transform.position = hit.point;
-
-                var damageable = hit.collider.GetComponentInParent<IDamagable>();
-                if ((Object)damageable)
-                {
-                    damageable.Damage(damage, hit.point, velocity.normalized);
-                }
-                
-                hitFX.SetActive(true);
-                hitFX.transform.SetParent(null);
-                Destroy(gameObject);
+                ProcessHit(hit);
             }
-            
+
             Integrate();
             transform.right = velocity;
             ignoreShooterFrames--;
         }
 
-        private bool ValidateHit(RaycastHit2D hit)
+        protected virtual bool ValidateHit(RaycastHit2D hit)
         {
             if (!hit) return false;
             if (ignoreShooterFrames > 0 && hit.collider.transform.IsChildOf(Shooter.transform)) return false;
-            
+
             return true;
+        }
+
+        protected virtual void ProcessHit(RaycastHit2D hit)
+        {
+            transform.position = hit.point;
+            DamageHit(hit);
+            Destroy();
+        }
+
+        protected void DamageHit(RaycastHit2D hit)
+        {
+            var damageable = hit.collider.GetComponentInParent<IDamagable>();
+            if ((Object)damageable)
+            {
+                damageable.Damage(damage, hit.point, velocity.normalized);
+            }
+        }
+
+        protected void Destroy()
+        {
+            if (hitFX)
+            {
+                hitFX.gameObject.SetActive(true);
+                hitFX.SetParent(null);
+            }
+
+            if (trail)
+            {
+                trail.transform.SetParent(null);
+                trail.Stop();
+            }
+
+            Destroy(gameObject);
         }
 
         private void Integrate()

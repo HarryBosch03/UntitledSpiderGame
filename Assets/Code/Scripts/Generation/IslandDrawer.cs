@@ -39,14 +39,13 @@ namespace Crabs.Generation
             GL.MultMatrix(transform.localToWorldMatrix);
             GL.Begin(GL.TRIANGLES);
             
-            map.Enumerate((x, y, weight) =>
+            map.Enumerate((x, y, tile) =>
             {
-                if (clip && weight > 0.0f) return;
+                if (tile == null) return;
 
                 var p = new Vector2(x, y);
-                
-                if (color) GL.Color(new Color(Mathf.Max(0.0f, -weight), Mathf.Max(0.0f, weight), 0.0f, 1.0f) * modulate);
-                else GL.Color(modulate);
+
+                GL.Color(tile.color);
                 GL.Vertex((p + new Vector2(-0.5f, 0.5f)) * map.unitScale);
                 GL.Vertex((p + new Vector2(-0.5f, -0.5f)) * map.unitScale);
                 GL.Vertex((p + new Vector2(0.5f, -0.5f)) * map.unitScale);

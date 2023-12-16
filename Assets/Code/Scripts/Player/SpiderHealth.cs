@@ -30,6 +30,8 @@ namespace Crabs.Player
 
         public void Damage(int damage, Vector2 point, Vector2 direction)
         {
+            if (damage <= 0) return;
+            
             currentHealth -= damage;
 
             HealthChangedEvent?.Invoke();
