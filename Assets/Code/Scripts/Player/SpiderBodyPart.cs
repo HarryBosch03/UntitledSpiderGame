@@ -1,41 +1,55 @@
+using System;
 using UnityEngine;
 
 namespace Crabs.Player
 {
-    public class SpiderBodyPart
+    [SelectionBase, DisallowMultipleComponent]
+    public sealed class SpiderBodyPart : MonoBehaviour
     {
-        private Transform target;
-        private Vector3 basis;
-
-        private Renderer renderer;
-
-        public bool flip = true;
-        public bool color = true;
+        public Vector3 leftPosition;
+        public Vector3 leftRotation;
         
-        public SpiderBodyPart(Transform target)
-        {
-            this.target = target;
-            basis = target.localPosition;
+        [Space]
+        public Vector3 rightPosition;
+        public Vector3 rightRotation;
+        
+        [Space]
+        [Range(0.0f, 1.0f)] public float smoothing;
 
-            renderer = target.GetComponentInChildren<Renderer>();
+        [Range(-1.0f, 1.0f)] public float lean = 1.0f;
+        
+        
+        private SpiderController controller;
+
+        private void Awake() { controller = GetComponentInParent<SpiderController>(); }
+
+        private void FixedUpdate()
+        {
+            var direction = controller.Direction;
+            lean = Mathf.Lerp(direction, lean, smoothing);
+
+            ApplyLean();
         }
 
-        public void FixedUpdate(int direction, float smoothing)
+        private void ApplyLean()
         {
-            Flip(direction, smoothing);
+            var t = Mathf.InverseLerp(-1.0f, 1.0f, lean);
+            transform.localPosition = Vector3.Lerp(leftPosition, rightPosition, t);
+            transform.localRotation = Quaternion.Slerp(Quaternion.Euler(leftRotation), Quaternion.Euler(rightRotation), t);
         }
 
-        private void Flip(int direction, float smoothing)
+        private void Reset()
         {
-            if (!flip) return;
-            direction = direction >= 0 ? 1 : -1;
-            target.localPosition = Vector3.Lerp(new Vector3(basis.x * direction, basis.y, basis.z), target.localPosition, smoothing);
+            rightPosition = transform.localPosition;
+            leftPosition = new Vector3(-rightPosition.x, rightPosition.y, rightPosition.z);
+
+            rightRotation = transform.eulerAngles;
+            leftRotation = rightRotation;
         }
 
-        public void SetMaterialPropertyBlock(MaterialPropertyBlock propertyBlock)
+        private void OnValidate()
         {
-            if (!color) return;
-            renderer.SetPropertyBlock(propertyBlock);
+            ApplyLean();
         }
     }
 }

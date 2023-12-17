@@ -11,7 +11,7 @@ namespace Crabs.Player
         private const float PickupRange = 3.0f;
         private const float Smoothing = 0.4f;
 
-        public Transform upperLeg, lowerLeg, tipTransform;
+        public Transform rootTransform, midTransform, tipTransform;
         public ParticleSystem stepDust;
 
         public SpiderController Spider { get; private set; }
@@ -24,20 +24,20 @@ namespace Crabs.Player
         public Vector2 localRestPosition;
         public Vector2 anchoredPosition;
         public bool anchored;
+        public Collider2D anchoredObject;
 
         public bool controlled;
-        public bool stepped;
         public Item heldItem;
         public bool forceNoAnchor;
 
-        public SpiderLeg(SpiderController spider, Transform upperLeg, Transform lowerLeg, int i, bool controlled)
+        public SpiderLeg(SpiderController spider, Transform rootTransform, Transform midTransform, int i, bool controlled)
         {
             Spider = spider;
-            this.upperLeg = upperLeg;
-            this.lowerLeg = lowerLeg;
+            this.rootTransform = rootTransform;
+            this.midTransform = midTransform;
             this.controlled = controlled;
 
-            tipTransform = lowerLeg.GetChild(0);
+            tipTransform = midTransform.GetChild(0);
             stepDust = tipTransform.GetComponentInChildren<ParticleSystem>();
 
             var a = (i * 90.0f + 45.0f) * Mathf.Deg2Rad;
@@ -123,6 +123,12 @@ namespace Crabs.Player
                 {
                     anchored = false;
                 }
+
+                if (!Physics2D.OverlapPoint(anchoredPosition))
+                {
+                    anchored = false;
+                }
+                
                 return;
             }
 
@@ -142,10 +148,12 @@ namespace Crabs.Player
 
                 if (score > best)
                 {
+                    stepDust.Play();
+                    
                     best = score;
                     anchoredPosition = cast.point;
+                    anchoredObject = cast.collider;
                     anchored = true;
-                    stepped = false;
                 }
             }
         }
@@ -155,8 +163,6 @@ namespace Crabs.Player
             if (!controlled) return;
             if (!Spider.Reaching) return;
 
-            stepped = true;
-            
             if (heldItem)
             {
                 target = heldItem.ModifyReachPosition(target) ?? target;
@@ -211,11 +217,11 @@ namespace Crabs.Player
             smoothedMid = Vector2.Lerp(mid, smoothedMid, Smoothing);
             smoothedTip = Vector2.Lerp(tip, smoothedTip, Smoothing);
             
-            upperLeg.position = new Vector3(smoothedRoot.x, smoothedRoot.y, upperLeg.position.z);
-            upperLeg.right = smoothedMid - smoothedRoot;
+            rootTransform.position = new Vector3(smoothedRoot.x, smoothedRoot.y, rootTransform.position.z);
+            rootTransform.right = smoothedMid - smoothedRoot;
 
-            lowerLeg.position = new Vector3(smoothedMid.x, smoothedMid.y, lowerLeg.position.z);
-            lowerLeg.right = smoothedTip - smoothedMid;
+            midTransform.position = new Vector3(smoothedMid.x, smoothedMid.y, midTransform.position.z);
+            midTransform.right = smoothedTip - smoothedMid;
         }
 
         private void IK()

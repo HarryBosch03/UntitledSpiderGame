@@ -38,6 +38,7 @@ namespace Crabs.Extras
         {
             end = position;
             var node = new Node(position);
+            node.anchored = true;
             nodes.Add(node);
         }
 
@@ -45,7 +46,7 @@ namespace Crabs.Extras
         {
             while ((target - end).magnitude > NodeDistance)
             {
-                nodes.Add(new Node(end));
+                nodes.Add(new Node(end, velocity));
                 end += (target - end).normalized * NodeDistance;
             }
         }
@@ -77,7 +78,7 @@ namespace Crabs.Extras
 
         private void Iterate()
         {
-            for (var i = 1; i < nodes.Count - 1; i++)
+            for (var i = 0; i < nodes.Count; i++)
             {
                 var node = nodes[i];
                 if (node.anchored)

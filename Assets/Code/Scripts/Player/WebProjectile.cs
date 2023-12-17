@@ -8,13 +8,17 @@ namespace Crabs.Player
     {
         public Web web;
 
-        private Vector2 webPosition;
+        public Vector2? anchor;
 
         private void Start()
         {
-            web = Instantiate(web);
-            web.StartWeb(transform.position);
+            if (anchor.HasValue)
+            {
+                web = Instantiate(web);
+                web.StartWeb(anchor.Value);
+            }
         }
+
 
         protected override void FixedUpdate()
         {

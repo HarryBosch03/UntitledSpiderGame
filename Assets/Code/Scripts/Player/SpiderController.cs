@@ -65,7 +65,7 @@ namespace Crabs.Player
 
         public readonly List<RaycastHit2D> wallCasts = new();
         public readonly List<SpiderLeg> legs = new();
-        public readonly List<SpiderBodyPart> bodyParts = new();
+        public readonly List<Renderer> coloredBodyParts = new();
 
         private void Awake()
         {
@@ -74,10 +74,13 @@ namespace Crabs.Player
             var model = transform.Find("Model");
             butt = model.Find("Butt");
             head = model.Find("Head");
-            
-            bodyParts.Add(new SpiderBodyPart(butt));
-            bodyParts.Add(new SpiderBodyPart(head));
 
+            foreach (var r in GetComponentsInChildren<Renderer>())
+            {
+                if (!r.CompareTag("SpiderColoredRenderer")) continue;
+                coloredBodyParts.Add(r);
+            }
+            
             for (var i = 0; i < 4; i++)
             {
                 legRoots[i] = model.Find($"Leg.Root.{i}");
@@ -85,14 +88,6 @@ namespace Crabs.Player
                 legTips[i] = legMids[i].GetChild(0);
 
                 legs.Add(new SpiderLeg(this, legRoots[i], legMids[i], i, i == 0));
-                bodyParts.Add(new SpiderBodyPart(legRoots[i])
-                {
-                    flip = false,
-                });
-                bodyParts.Add(new SpiderBodyPart(legMids[i])
-                {
-                    flip = false,
-                });
             }
 
             LegUpperLength = (legRoots[0].position - legMids[0].position).magnitude;
@@ -134,8 +129,18 @@ namespace Crabs.Player
             if (!Web) return;
             if (Time.time - lastWebTime < webFireDelay) return;
 
-            web.Spawn(gameObject, transform.position, ReachVector, webSpeed, 0);
+            var instance = (WebProjectile)web.Spawn(gameObject, transform.position, ReachVector, webSpeed, 0);
             lastWebTime = Time.time;
+
+            instance.anchor = null;
+            foreach (var l in legs)
+            {
+                if (!l.anchored) continue;
+                if (l.anchoredObject.gameObject.layer == 9) continue;
+                
+                instance.anchor = l.anchoredPosition;
+                break;
+            }
         }
 
         private void ResetFlags()
@@ -162,15 +167,8 @@ namespace Crabs.Player
 
         private void UpdateDirection()
         {
-            var groundVector = GroundPoint - Body.position;
-            groundVector = Vector2.Lerp(Vector2.up, groundVector, groundVector.magnitude);
-            
-            var facing = MoveDirection.x * -groundVector.y;
+            var facing = Reaching ? Vector2.Dot(transform.right, ReachVector) : Vector2.Dot(transform.right, MoveDirection);
             if (Mathf.Abs(facing) > 0.2f) Direction = facing > 0.0f ? 1 : -1;
-            foreach (var e in bodyParts)
-            {
-                e.FixedUpdate(Direction, bodyPartSmoothing);
-            }
         }
 
         private void UpdateLegs()
@@ -236,7 +234,7 @@ namespace Crabs.Player
         {
             var propertyBlock = new MaterialPropertyBlock();
             propertyBlock.SetColor("_MainColor", color);
-            foreach (var e in bodyParts) e.SetMaterialPropertyBlock(propertyBlock);
+            foreach (var e in coloredBodyParts) e.SetPropertyBlock(propertyBlock);
 
             foreach (var e in GetComponentsInChildren<ColorWithSpider>(true))
             {
