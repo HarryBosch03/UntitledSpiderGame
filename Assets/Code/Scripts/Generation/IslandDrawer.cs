@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Crabs.Generation
+namespace UntitledSpiderGame.Runtime.Generation
 {
     [RequireComponent(typeof(IslandGenerator))]
     public class IslandDrawer : MonoBehaviour

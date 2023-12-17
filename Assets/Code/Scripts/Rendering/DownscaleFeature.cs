@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
-namespace Crabs.Rendering
+namespace UntitledSpiderGame.Runtime.Rendering
 {
     public sealed class DownscaleFeature : ScriptableRendererFeature
     {

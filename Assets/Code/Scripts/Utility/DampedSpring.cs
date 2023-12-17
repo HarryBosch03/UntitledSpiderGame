@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace Crabs.Utility
+namespace UntitledSpiderGame.Runtime.Utility
 {
     [System.Serializable]
     public class DampedSpring

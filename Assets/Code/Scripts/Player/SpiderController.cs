@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using Crabs.Extras;
-using Crabs.Utility;
 using UnityEngine;
+using UntitledSpiderGame.Runtime.Extras;
+using UntitledSpiderGame.Runtime.Utility;
 
-namespace Crabs.Player
+namespace UntitledSpiderGame.Runtime.Player
 {
     [RequireComponent(typeof(Rigidbody2D))]
     [SelectionBase, DisallowMultipleComponent]
@@ -27,9 +27,7 @@ namespace Crabs.Player
 
         private float lastJumpTime;
         private LineRenderer webLines;
-
-        public static event Action<SpiderController> DiedEvent;
-
+        
         public static readonly List<SpiderController> All = new();
 
         #region Input
@@ -95,7 +93,6 @@ namespace Crabs.Player
         private void OnDisable()
         {
             All.Remove(this);
-            DiedEvent?.Invoke(this);
         }
 
         private void FixedUpdate()

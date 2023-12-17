@@ -1,7 +1,6 @@
 using UnityEngine;
-using UnityEngine.Serialization;
 
-namespace Crabs.Generation
+namespace UntitledSpiderGame.Runtime.Generation
 {
     [System.Serializable]
     public class FractalNoise

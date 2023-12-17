@@ -4,13 +4,13 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Serialization;
 
-namespace Crabs.Player
+namespace UntitledSpiderGame.Runtime.Player
 {
     [SelectionBase]
     [DisallowMultipleComponent]
     public sealed class PlayerController : MonoBehaviour
     {
-        public static readonly Color[] PlayerColors = 
+        public static readonly Color[] PlayerColors =
         {
             new Color(1f, 0.67f, 0.04f),
             new Color(0.63f, 1f, 0.16f),
@@ -20,24 +20,25 @@ namespace Crabs.Player
             new Color(0.11f, 1f, 0.75f),
             new Color(1f, 0.11f, 0.88f),
         };
-        
+
         public InputActionAsset inputAsset;
         public float gamepadCursorDistance = 5.0f;
-        [FormerlySerializedAs("spiderWeapon")] public Gun gun;
 
+        private Gun gun;
         private int playerIndex;
         private bool useMouse;
         private Camera mainCamera;
         private Dictionary<string, InputAction> actions;
 
         public SpiderController ActiveSpider { get; private set; }
-        
+
         public static readonly List<PlayerController> All = new();
 
-        private void Awake()
-        {
-            mainCamera = Camera.main;
-        }
+
+        public static event Action<PlayerController, GameObject, DamageArgs> KillEvent;
+        public static event Action<PlayerController, GameObject, DamageArgs> DiedEvent;
+
+        private void Awake() { mainCamera = Camera.main; }
 
         private void OnEnable()
         {
@@ -53,12 +54,29 @@ namespace Crabs.Player
 
             playerIndex = All.Count;
             All.Add(this);
+
+            SpiderHealth.DiedEvent += OnSpiderDied;
         }
 
         private void OnDisable()
         {
             Destroy(inputAsset);
             All.Remove(this);
+
+            SpiderHealth.DiedEvent -= OnSpiderDied;
+        }
+
+        private void OnSpiderDied(SpiderHealth spider, GameObject invoker, DamageArgs args)
+        {
+            if (!ActiveSpider) return;
+            if (spider.gameObject == ActiveSpider.gameObject)
+            {
+                DiedEvent?.Invoke(this, invoker, args);
+            }
+            if (invoker == ActiveSpider.gameObject)
+            {
+                KillEvent?.Invoke(this, invoker, args);
+            }
         }
 
         private void Update()
@@ -69,7 +87,7 @@ namespace Crabs.Player
                 ActiveSpider.ReachVector = actions["Reach"].ReadValue<Vector2>() * gamepadCursorDistance;
                 if (actions["Jump"].WasPerformedThisFrame()) ActiveSpider.Jump = true;
                 if (actions["Web"].WasPerformedThisFrame()) ActiveSpider.Web = true;
-                
+
                 if (actions["Use"].WasPerformedThisFrame()) gun.Shoot = true;
                 if (actions["Use"].WasReleasedThisFrame()) gun.Shoot = false;
 
@@ -88,7 +106,7 @@ namespace Crabs.Player
             foreach (var e in devices)
             {
                 if (e is not Keyboard && e is not Mouse) continue;
-                
+
                 useMouse = true;
                 break;
             }

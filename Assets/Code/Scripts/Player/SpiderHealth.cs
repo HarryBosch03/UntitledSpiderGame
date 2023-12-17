@@ -1,8 +1,8 @@
 using System;
-using Crabs.Utility;
 using UnityEngine;
+using UntitledSpiderGame.Runtime.Utility;
 
-namespace Crabs.Player
+namespace UntitledSpiderGame.Runtime.Player
 {
     public class SpiderHealth : MonoBehaviour, IDamagable
     {
@@ -13,6 +13,10 @@ namespace Crabs.Player
 
         private ParticleSystem hitEffect;
         private ParticleSystem deathEffect;
+
+        public GameObject LastDamageInvoker { get; private set; }
+        public static event DamageEvent DamagedEvent;
+        public static event DamageEvent DiedEvent;
 
         private void Awake()
         {
@@ -32,14 +36,15 @@ namespace Crabs.Player
         public int CurrentHealth => currentHealth;
         public int MaxHealth => maxHealth;
 
-        public void Damage(DamageArgs damage, Vector2 point, Vector2 direction)
+        public void Damage(DamageArgs args, GameObject invoker, Vector2 point, Vector2 direction)
         {
-            if (damage.damage <= 0) return;
-            
-            currentHealth -= damage.damage;
-            body.AddForce(direction.normalized * damage.knockback, ForceMode2D.Impulse);
+            currentHealth -= args.damage;
+            body.AddForce(direction.normalized * args.knockback, ForceMode2D.Impulse);
 
+            if (invoker) LastDamageInvoker = invoker;
+            
             HealthChangedEvent?.Invoke();
+            DamagedEvent?.Invoke(this, LastDamageInvoker, args);
             
             if (currentHealth <= 0)
             {
@@ -48,6 +53,8 @@ namespace Crabs.Player
                 
                 gameObject.SetActive(false);
                 CameraController.Shake(1.0f);
+                
+                DiedEvent?.Invoke(this, LastDamageInvoker, args);
             }
             else
             {
@@ -55,5 +62,7 @@ namespace Crabs.Player
                 CameraController.Shake(0.2f);
             }
         }
+
+        public delegate void DamageEvent(SpiderHealth spider, GameObject invoker, DamageArgs args);
     }
 }

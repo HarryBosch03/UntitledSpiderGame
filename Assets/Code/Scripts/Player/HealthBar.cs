@@ -1,8 +1,8 @@
-using Crabs.Utility;
 using UnityEngine;
 using UnityEngine.UI;
+using UntitledSpiderGame.Runtime.Utility;
 
-namespace Crabs.Player
+namespace UntitledSpiderGame.Runtime.Player
 {
     public class HealthBar : MonoBehaviour
     {

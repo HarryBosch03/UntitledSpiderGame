@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Crabs.Utility
+namespace UntitledSpiderGame.Runtime.Utility
 {
     public static class Noise
     {

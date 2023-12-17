@@ -1,8 +1,7 @@
-using System;
-using Crabs.Generation.Tiles;
 using UnityEngine;
+using UntitledSpiderGame.Runtime.Generation.Tiles;
 
-namespace Crabs.Generation
+namespace UntitledSpiderGame.Runtime.Generation
 {
     [SelectionBase, DisallowMultipleComponent]
     public sealed class IslandGenerator : MonoBehaviour

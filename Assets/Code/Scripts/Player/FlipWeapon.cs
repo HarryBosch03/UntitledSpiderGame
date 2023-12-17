@@ -1,7 +1,6 @@
-using System;
 using UnityEngine;
 
-namespace Crabs.Player
+namespace UntitledSpiderGame.Runtime.Player
 {
     [SelectionBase, DisallowMultipleComponent]
     public sealed class FlipWeapon : MonoBehaviour

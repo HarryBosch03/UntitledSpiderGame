@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Crabs.Player
+namespace UntitledSpiderGame.Runtime.Player
 {
     public sealed class ColorWithSpider : MonoBehaviour
     {

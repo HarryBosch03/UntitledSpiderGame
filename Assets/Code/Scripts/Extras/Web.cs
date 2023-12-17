@@ -1,8 +1,8 @@
 using System;
-using Crabs.Player;
 using UnityEngine;
+using UntitledSpiderGame.Runtime.Player;
 
-namespace Crabs.Extras
+namespace UntitledSpiderGame.Runtime.Extras
 {
     [System.Serializable]
     public class Web

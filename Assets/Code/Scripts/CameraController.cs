@@ -1,9 +1,9 @@
 using System;
-using Crabs.Player;
-using Crabs.Utility;
 using UnityEngine;
+using UntitledSpiderGame.Runtime.Player;
+using UntitledSpiderGame.Runtime.Utility;
 
-namespace Crabs
+namespace UntitledSpiderGame.Runtime
 {
     public class CameraController : MonoBehaviour
     {

@@ -1,12 +1,11 @@
 using System;
 using System.Collections.Generic;
-using Crabs.Generation.Tiles;
-using Crabs.Player;
 using UnityEngine;
 using UnityEngine.Rendering;
-using Random = System.Random;
+using UntitledSpiderGame.Runtime.Generation.Tiles;
+using UntitledSpiderGame.Runtime.Player;
 
-namespace Crabs.Generation
+namespace UntitledSpiderGame.Runtime.Generation
 {
     [RequireComponent(typeof(MeshFilter))]
     public class IslandChunk : MonoBehaviour, IDamagable
@@ -232,16 +231,16 @@ namespace Crabs.Generation
             }
         }
 
-        public void Damage(DamageArgs damage, Vector2 point, Vector2 direction)
+        public void Damage(DamageArgs args, GameObject invoker, Vector2 point, Vector2 direction)
         {
             point /= mapData.unitScale;
             var min = Vector2Int.FloorToInt(point);
             var max = min + Vector2Int.one;
 
-            Damage(damage.damage, min.x, min.y);
-            Damage(damage.damage, max.x, min.y);
-            Damage(damage.damage, min.x, max.y);
-            Damage(damage.damage, max.x, max.y);
+            Damage(args.damage, min.x, min.y);
+            Damage(args.damage, max.x, min.y);
+            Damage(args.damage, min.x, max.y);
+            Damage(args.damage, max.x, max.y);
         }
 
         public void Damage(int damage, int x, int y)

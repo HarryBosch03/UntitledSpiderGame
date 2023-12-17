@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace Crabs.Utility
+namespace UntitledSpiderGame.Runtime.Utility
 {
     public static class Extensions
     {

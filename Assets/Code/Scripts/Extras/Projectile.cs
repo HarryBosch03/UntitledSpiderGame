@@ -1,9 +1,9 @@
-using Crabs.Player;
-using Crabs.Utility;
 using UnityEngine;
+using UntitledSpiderGame.Runtime.Player;
+using UntitledSpiderGame.Runtime.Utility;
 using Object = UnityEngine.Object;
 
-namespace Crabs.Extras
+namespace UntitledSpiderGame.Runtime.Extras
 {
     public class Projectile : MonoBehaviour
     {
@@ -82,7 +82,7 @@ namespace Crabs.Extras
             var damageable = hit.collider.GetComponentInParent<IDamagable>();
             if ((Object)damageable)
             {
-                damageable.Damage(damage, hit.point, velocity.normalized);
+                damageable.Damage(damage, Shooter, hit.point, velocity.normalized);
             }
         }
 

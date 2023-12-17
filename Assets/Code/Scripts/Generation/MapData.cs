@@ -1,10 +1,10 @@
 using System;
-using Crabs.Generation.Tiles;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
+using UntitledSpiderGame.Runtime.Generation.Tiles;
 using Object = UnityEngine.Object;
 
-namespace Crabs.Generation
+namespace UntitledSpiderGame.Runtime.Generation
 {
     public class MapData
     {

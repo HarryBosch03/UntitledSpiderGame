@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Crabs.Player
+namespace UntitledSpiderGame.Runtime.Player
 {
     [SelectionBase]
     [DisallowMultipleComponent]

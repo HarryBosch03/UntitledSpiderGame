@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace Crabs.Player
+namespace UntitledSpiderGame.Runtime.Player
 {
     public interface IDamagable
     {
@@ -9,7 +9,7 @@ namespace Crabs.Player
         
         int CurrentHealth { get; }
         int MaxHealth { get; }
-        
-        void Damage(DamageArgs damage, Vector2 point, Vector2 direction);
+
+        void Damage(DamageArgs args, GameObject invoker, Vector2 point, Vector2 direction);
     }
 }

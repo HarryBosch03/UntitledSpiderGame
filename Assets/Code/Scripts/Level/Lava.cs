@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using Crabs.Player;
 using UnityEngine;
+using UntitledSpiderGame.Runtime.Player;
 
-namespace Crabs.Level
+namespace UntitledSpiderGame.Runtime.Level
 {
     public class Lava : MonoBehaviour
     {
@@ -19,7 +19,7 @@ namespace Crabs.Level
                 damageable.Damage(new DamageArgs
                 {
                     damage = 1
-                }, e.transform.position, Vector2.up);
+                }, gameObject, e.transform.position, Vector2.up);
             }
         }
 

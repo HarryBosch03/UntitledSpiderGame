@@ -1,8 +1,7 @@
-using System;
-using Crabs.Extras;
 using UnityEngine;
+using UntitledSpiderGame.Runtime.Extras;
 
-namespace Crabs.Player
+namespace UntitledSpiderGame.Runtime.Player
 {
     [RequireComponent(typeof(SpiderController))]
     public class Gun : MonoBehaviour

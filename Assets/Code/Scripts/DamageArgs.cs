@@ -1,4 +1,4 @@
-namespace Crabs
+namespace UntitledSpiderGame.Runtime
 {
     [System.Serializable]
     public struct DamageArgs

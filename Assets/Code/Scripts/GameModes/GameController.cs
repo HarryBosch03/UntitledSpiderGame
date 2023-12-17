@@ -1,20 +1,19 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
-using Crabs.Player;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UntitledSpiderGame.Runtime.Player;
 using Random = UnityEngine.Random;
 
-namespace Crabs.GameModes
+namespace UntitledSpiderGame.Runtime.GameModes
 {
     [SelectionBase]
     [DisallowMultipleComponent]
-    public sealed class TestingGameMode : GameMode
+    public sealed class GameController : MonoBehaviour
     {
         [SerializeField] private PlayerController playerControllerPrefab;
         [SerializeField] private SpiderController spiderPrefab;
-        [SerializeField] private float respawnTime;
+        [SerializeField] private GamemodeSettings settings;
         [SerializeField] private float spawnMin;
         [SerializeField] private float spawnMax;
         [SerializeField] private float spawnHeight;
@@ -22,33 +21,32 @@ namespace Crabs.GameModes
 
         private static readonly List<InputDevice> RegisteredDevices = new();
 
-        protected override void OnEnable()
-        {
-            base.OnEnable();
+        public List<PlayerController> players = new();
+        public List<int> scores = new();
 
+        private void OnEnable()
+        {
             joinAction.Enable();
             joinAction.started += JoinDevice;
 
-            SpiderController.DiedEvent += OnSpiderDied;
+            SpiderHealth.DiedEvent += OnSpiderDied;
         }
 
-        protected override void OnDisable()
+        private void OnDisable()
         {
-            base.OnDisable();
-
             joinAction.started -= JoinDevice;
             joinAction.Disable();
             
-            SpiderController.DiedEvent -= OnSpiderDied;
+            SpiderHealth.DiedEvent -= OnSpiderDied;
         }
 
-        private void OnSpiderDied(SpiderController spider)
+        private void OnSpiderDied(SpiderHealth spiderHealth, GameObject o, DamageArgs arg3)
         {
             var controllingPlayer = (PlayerController)null;
 
-            foreach (var player in PlayerController.All)
+            foreach (var player in players)
             {
-                if (player.ActiveSpider != spider) continue;
+                if (player.ActiveSpider.gameObject != spiderHealth.gameObject) continue;
 
                 controllingPlayer = player;
                 break;
@@ -61,7 +59,7 @@ namespace Crabs.GameModes
 
         private IEnumerator Respawn(PlayerController player)
         {
-            yield return new WaitForSeconds(respawnTime);
+            yield return new WaitForSeconds(settings.respawnTime);
 
             var spider = Instantiate(spiderPrefab);
             spider.transform.position = GetSpawnPoint();
@@ -78,7 +76,7 @@ namespace Crabs.GameModes
                 target.Damage(new DamageArgs
                 {
                     damage = 9999
-                }, target.transform.position, Vector2.up);
+                }, null, target.transform.position, Vector2.up);
             }
         }
 
@@ -133,6 +131,9 @@ namespace Crabs.GameModes
             var sp = GetSpawnPoint();
             var spiderInstance = Instantiate(spiderPrefab, sp, Quaternion.identity);
             pcInstance.AssignSpider(spiderInstance);
+            
+            players.Add(pcInstance);
+            scores.Add(0);
         }
 
         private void OnDrawGizmosSelected()

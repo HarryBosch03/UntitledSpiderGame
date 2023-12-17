@@ -1,7 +1,6 @@
 using UnityEngine;
-using UnityEngine.Serialization;
 
-namespace Crabs.Generation.Tiles
+namespace UntitledSpiderGame.Runtime.Generation.Tiles
 {
     [System.Serializable]
     public class Tile
