@@ -17,6 +17,11 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
+      name: Grey
+    second: {fileID: 2100000, guid: 96eaedcd671a75d418fbea4683827905, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
       name: White
     second: {fileID: 2100000, guid: 24dc315bbba874943b98a857810f5adb, type: 2}
   materials:

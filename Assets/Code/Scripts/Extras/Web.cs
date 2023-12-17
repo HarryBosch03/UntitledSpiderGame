@@ -11,7 +11,7 @@ namespace Crabs.Extras
         private const float LineWidth = 0.1f;
 
         public float maxWebLength = 30.0f;
-        public float webClimbScale = 3.0f;
+        public float webForce = 200.0f;
 
         private float animation;
 
@@ -26,6 +26,8 @@ namespace Crabs.Extras
 
             if (CurrentState == State.Attached)
             {
+                body.AddForce((hit.point - body.position).normalized * webForce);
+                
                 var distance = (hit.point - body.position).magnitude; 
                 if (distance > maxWebLength)
                 {

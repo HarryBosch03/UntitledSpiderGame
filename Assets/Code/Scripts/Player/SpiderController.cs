@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Crabs.Extras;
-using Crabs.Items;
 using Crabs.Utility;
 using UnityEngine;
 
@@ -17,8 +16,6 @@ namespace Crabs.Player
         [SerializeField] private float accelerationTime = 0.1f;
         [Range(0.0f, 1.0f)]
         [SerializeField] private float airMovement = 0.2f;
-
-        public Item spawnItem;
 
         [Space]
         [SerializeField] private float rotationSpring = 0.2f;
@@ -40,8 +37,6 @@ namespace Crabs.Player
         public bool Reaching { get; private set; }
         public Vector2 ReachVector { get; set; }
         public Vector2 MoveDirection { get; set; }
-        public bool Use { get; set; }
-        public bool Drop { get; set; }
         public bool Jump { get; set; }
         public bool Web { get; set; }
 
@@ -95,16 +90,12 @@ namespace Crabs.Player
         private void OnEnable()
         {
             All.Add(this);
-
-            foreach (var leg in legs) leg.OnEnable();
         }
 
         private void OnDisable()
         {
             All.Remove(this);
             DiedEvent?.Invoke(this);
-
-            foreach (var leg in legs) leg.OnDisable();
         }
 
         private void FixedUpdate()
@@ -130,8 +121,6 @@ namespace Crabs.Player
 
         private void ResetFlags()
         {
-            Use = false;
-            Drop = false;
             Jump = false;
             Web = false;
         }
@@ -175,17 +164,8 @@ namespace Crabs.Player
 
             var force = Vector2.zero;
             var up = -transform.up;
-
-            if (web.CurrentState == Extras.Web.State.Attached)
-            {
-                var normal = (web.End - Body.position).normalized;
-                var tangent = new Vector2(-normal.y, normal.x);
-                
-                force += normal * (MoveDirection.y * moveSpeed * web.webClimbScale - Vector2.Dot(normal, Body.velocity)) * 2.0f / accelerationTime * web.webClimbScale;
-                force -= normal * Vector2.Dot(Physics2D.gravity * Body.gravityScale, normal);
-                force += tangent * MoveDirection.x * -Mathf.Sign(normal.y) * moveSpeed * 2.0f / accelerationTime * airMovement;
-            }
-            else if (Anchored)
+            
+            if (Anchored)
             {
                 force = (target - Body.velocity) * 2.0f / accelerationTime;
                 force -= Physics2D.gravity * Body.gravityScale;

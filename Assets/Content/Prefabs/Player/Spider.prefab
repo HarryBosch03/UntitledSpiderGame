@@ -191,6 +191,7 @@ GameObject:
   - component: {fileID: 3373450816341298516}
   - component: {fileID: 3373450816341298518}
   - component: {fileID: 4470308104192520110}
+  - component: {fileID: 5121861374919411459}
   m_Layer: 7
   m_Name: Spider
   m_TagString: Untagged
@@ -255,13 +256,12 @@ MonoBehaviour:
   moveSpeed: 10
   accelerationTime: 0.3
   airMovement: 0.2
-  spawnItem: {fileID: 8870824600127790951, guid: 3f65d1150e5c65c4e95830ca364d478a, type: 3}
   rotationSpring: 0.2
   rotationDamping: 0.05
   jumpForce: 30
   web:
     maxWebLength: 30
-    webClimbScale: 3
+    webForce: 200
 --- !u!114 &4470308104192520110
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -276,6 +276,28 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   currentHealth: 3
   maxHealth: 3
+--- !u!114 &5121861374919411459
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3373450816341298512}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 508db8a27abd4e1d9ca41e6aec367599, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  prefab: {fileID: 9092994082209271172, guid: feb55d0c82e05e04987ebc9d061c2e32, type: 3}
+  prefabSpawnPoint: {fileID: 2339694442773294706}
+  damage: 1
+  muzzleSpeed: 35
+  fireDelay: 0.02
+  maxAmmo: 7
+  reloadTime: 1
+  recoilResponse: 1.2
+  recoilDecay: 45
+  ammo: 7
 --- !u!1 &4640013249685051605
 GameObject:
   m_ObjectHideFlags: 0
@@ -763,6 +785,10 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 7
       objectReference: {fileID: 0}
+    - target: {fileID: 1056274533485730008, guid: 9aaabc26bc090f044ad18593a604d391, type: 3}
+      propertyPath: m_RootOrder
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 2079485403294767213, guid: 9aaabc26bc090f044ad18593a604d391, type: 3}
       propertyPath: m_Layer
       value: 7
@@ -837,6 +863,23 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9aaabc26bc090f044ad18593a604d391, type: 3}
+--- !u!1 &778041817285949528 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2602182616655990514, guid: 9aaabc26bc090f044ad18593a604d391, type: 3}
+  m_PrefabInstance: {fileID: 3373450814906463914}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &398462381949602629
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 778041817285949528}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0d2380c93a2bc0e4abdcb91ca8ec64c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1294484379458562347 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -4673037616924647551, guid: 9aaabc26bc090f044ad18593a604d391, type: 3}
@@ -901,6 +944,11 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 1.0163181, y: 0.10876417}
   m_EdgeRadius: 0
+--- !u!4 &2339694442773294706 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1056274533485730008, guid: 9aaabc26bc090f044ad18593a604d391, type: 3}
+  m_PrefabInstance: {fileID: 3373450814906463914}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &2979798393577869633 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 9aaabc26bc090f044ad18593a604d391, type: 3}

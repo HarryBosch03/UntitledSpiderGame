@@ -30,6 +30,7 @@ namespace Crabs.Extras
             instance.damage = damage;
             instance.velocity = direction.normalized * muzzleSpeed;
             instance.transform.position = position;
+            instance.transform.right = direction;
             return instance;
         }
 

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Serialization;
 
 namespace Crabs.Player
 {
@@ -21,13 +22,15 @@ namespace Crabs.Player
         };
         
         public InputActionAsset inputAsset;
+        [FormerlySerializedAs("spiderWeapon")] public Gun gun;
 
         private int playerIndex;
         private bool useMouse;
         private Camera mainCamera;
         private Dictionary<string, InputAction> actions;
 
-        public SpiderController ActiveController { get; private set; }
+        public SpiderController ActiveSpider { get; private set; }
+        
         public static readonly List<PlayerController> All = new();
 
         private void Awake()
@@ -59,19 +62,20 @@ namespace Crabs.Player
 
         private void Update()
         {
-            if (ActiveController)
+            if (ActiveSpider)
             {
-                ActiveController.MoveDirection = actions["Move"].ReadValue<Vector2>();
-                ActiveController.ReachVector = actions["Reach"].ReadValue<Vector2>();
-                if (actions["Jump"].WasPerformedThisFrame()) ActiveController.Jump = true;
-                if (actions["Use"].WasPerformedThisFrame()) ActiveController.Use = true;
-                if (actions["Drop"].WasPerformedThisFrame()) ActiveController.Drop = true;
-                if (actions["Web"].WasPerformedThisFrame()) ActiveController.Web = true;
+                ActiveSpider.MoveDirection = actions["Move"].ReadValue<Vector2>();
+                ActiveSpider.ReachVector = actions["Reach"].ReadValue<Vector2>();
+                if (actions["Jump"].WasPerformedThisFrame()) ActiveSpider.Jump = true;
+                if (actions["Web"].WasPerformedThisFrame()) ActiveSpider.Web = true;
+                
+                if (actions["Use"].WasPerformedThisFrame()) gun.Shoot = true;
+                if (actions["Use"].WasReleasedThisFrame()) gun.Shoot = false;
 
                 if (useMouse)
                 {
                     var mousePos = (Vector2)mainCamera.ScreenToWorldPoint(Mouse.current.position.ReadValue());
-                    ActiveController.ReachVector = mousePos - (Vector2)ActiveController.transform.position;
+                    ActiveSpider.ReachVector = mousePos - (Vector2)ActiveSpider.transform.position;
                 }
             }
         }
@@ -99,8 +103,10 @@ namespace Crabs.Player
 
         public void AssignSpider(SpiderController spider)
         {
-            ActiveController = spider;
+            ActiveSpider = spider;
             spider.SetColor(PlayerColors[playerIndex]);
+
+            gun = spider.GetComponent<Gun>();
         }
     }
 }

@@ -30,10 +30,10 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _Brightness: 0.8
-    - _Gradient: 2
+    - _Brightness: 3
+    - _Gradient: 1
     - _RockSize: 0.5
-    - _WaveHeight: 3
+    - _WaveHeight: 7
     - _WaveSize: 8
     - _WaveSpeed: 2
     - _Worley: 16

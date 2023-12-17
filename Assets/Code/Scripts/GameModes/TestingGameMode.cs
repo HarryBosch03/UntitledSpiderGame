@@ -48,7 +48,7 @@ namespace Crabs.GameModes
 
             foreach (var player in PlayerController.All)
             {
-                if (player.ActiveController != spider) continue;
+                if (player.ActiveSpider != spider) continue;
 
                 controllingPlayer = player;
                 break;

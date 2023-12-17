@@ -42,15 +42,6 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "Drop",
-                    "type": "Button",
-                    "id": "cc12ea11-3491-4144-8b88-e8aaa6d035d5",
-                    "expectedControlType": "Button",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                },
-                {
                     "name": "Web",
                     "type": "Button",
                     "id": "39d6fdb9-b58d-4048-8a04-e2387e2f83bd",
@@ -80,28 +71,6 @@
                     "processors": "",
                     "groups": "",
                     "action": "Use",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "7c247ad5-e5da-4f22-bab6-854e6b23a726",
-                    "path": "<Gamepad>/leftShoulder",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Drop",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "62620067-e9b5-43b7-98bb-74a24bbdeffc",
-                    "path": "<Keyboard>/q",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Drop",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
