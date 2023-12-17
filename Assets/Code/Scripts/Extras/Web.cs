@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -6,15 +7,16 @@ namespace Crabs.Extras
     public class Web : MonoBehaviour
     {
         public const int WebLayer = 9;
-        private const int SubFrames = 60;
-        private const float NodeDistance = 1.0f;
+        private const int SubFrames = 6;
+        private const float NodeDistance = 0.2f;
         private const float WebWidth = 0.05f;
 
         private LineRenderer lines;
-        private new PolygonCollider2D collider;
-        private Vector2 end;
 
-        public List<Node> nodes = new();
+        [HideInInspector] public Rigidbody2D start;
+        [HideInInspector] public Rigidbody2D end;
+
+        public Node[] nodes;
 
         private void Awake()
         {
@@ -22,8 +24,6 @@ namespace Crabs.Extras
             lines.useWorldSpace = true;
             lines.startWidth = WebWidth;
             lines.endWidth = WebWidth;
-
-            collider = GetComponent<PolygonCollider2D>();
 
             transform.position = Vector3.zero;
             transform.rotation = Quaternion.identity;
@@ -34,42 +34,52 @@ namespace Crabs.Extras
             }
         }
 
-        public void StartWeb(Vector2 position)
+        public void StartWeb(Vector2 position, Vector2 velocity, float totalLength)
         {
-            end = position;
-            var node = new Node(position);
-            node.anchored = true;
-            nodes.Add(node);
-        }
+            var nodeCount = Mathf.Max(Mathf.CeilToInt(totalLength / NodeDistance), 2);
+            nodes = new Node[nodeCount];
 
-        public void Catchup(Vector2 target, Vector2 velocity)
-        {
-            while ((target - end).magnitude > NodeDistance)
+            for (var i = 0; i < nodes.Length; i++)
             {
-                nodes.Add(new Node(end, velocity));
-                end += (target - end).normalized * NodeDistance;
+                var p = i / (nodes.Length - 1.0f);
+
+                nodes[i] = new Node(position + velocity * Time.fixedDeltaTime * p, velocity * p);
             }
         }
 
         private void FixedUpdate()
         {
-            Iterate();
             Constrain();
-            Collide();
-            BuildCollision();
+            Iterate();
         }
 
         private void Collide()
         {
-            for (var i = 0; i < nodes.Count; i++)
+            for (var i = 0; i < nodes.Length; i++)
             {
                 var node = nodes[i];
 
-                var hit = Physics2D.Linecast(node.lastPosition1, node.position, 0b1);
-                if (hit)
+                var direction = node.position - node.lastPosition1;
+                var length = direction.magnitude;
+                direction /= length;
+
+                if (length > WebWidth * 0.5f)
                 {
-                    node.position = hit.point;
-                    node.anchored = true;
+                    var hit = Physics2D.CircleCast(node.lastPosition1, WebWidth * 0.5f, direction, length, 0b1);
+                    if (hit)
+                    {
+                        node.position = hit.collider.ClosestPoint(hit.point);
+                        node.lastPosition1 = node.position;
+                        node.lastPosition2 = node.position;
+                    }
+                }
+
+                var c = Physics2D.OverlapCircle(node.position, WebWidth * 0.5f, 0b1);
+                if (c)
+                {
+                    node.position = c.ClosestPoint(node.position);
+                    node.lastPosition1 = node.position;
+                    node.lastPosition2 = node.position;
                 }
 
                 nodes[i] = node;
@@ -78,7 +88,7 @@ namespace Crabs.Extras
 
         private void Iterate()
         {
-            for (var i = 0; i < nodes.Count; i++)
+            for (var i = 0; i < nodes.Length; i++)
             {
                 var node = nodes[i];
                 if (node.anchored)
@@ -87,12 +97,12 @@ namespace Crabs.Extras
                 }
                 else
                 {
-                    node.lastPosition2 = nodes[i].lastPosition1;
+                    node.lastPosition2 = nodes[i].lastPosition1 + Physics2D.gravity * Time.deltaTime;
                     node.lastPosition1 = nodes[i].position;
 
                     var velocity = nodes[i].position - nodes[i].lastPosition1;
-                    var acceleration = velocity - (nodes[i].lastPosition1 - nodes[i].lastPosition2) + Physics2D.gravity * Time.deltaTime;
-                    
+                    var acceleration = velocity - (nodes[i].lastPosition1 - nodes[i].lastPosition2);
+
                     node.position = nodes[i].position + velocity + acceleration * Time.deltaTime * 0.5f;
                 }
 
@@ -104,7 +114,7 @@ namespace Crabs.Extras
         {
             for (var i = 0; i < SubFrames; i++)
             {
-                for (var j = 0; j < nodes.Count - 1; j++)
+                for (var j = 0; j < nodes.Length - 1; j++)
                 {
                     var a = nodes[j];
                     var b = nodes[j + 1];
@@ -122,49 +132,16 @@ namespace Crabs.Extras
                     if (!a.anchored) nodes[j] = a;
                     if (!b.anchored) nodes[j + 1] = b;
                 }
+                
+                Collide();
             }
-        }
-
-        private void BuildCollision()
-        {
-            if (nodes.Count < 2)
-            {
-                collider.points = new Vector2[0];
-                return;
-            }
-
-            var points = new Vector2[nodes.Count * 2];
-
-            for (var i = 0; i < nodes.Count; i++)
-            {
-                var a = nodes[i];
-                Node b;
-                Vector2 dir;
-                if (i == nodes.Count - 1)
-                {
-                    b = nodes[i - 1];
-                    dir = (a.position - b.position).normalized;
-                }
-                else
-                {
-                    b = nodes[i + 1];
-                    dir = (b.position - a.position).normalized;
-                }
-
-                var tangent = new Vector2(-dir.y, dir.x);
-
-                points[i] = nodes[i].position - tangent * WebWidth;
-                points[^(i + 1)] = nodes[i].position + tangent * WebWidth;
-            }
-
-            collider.points = points;
         }
 
         private void Update()
         {
-            lines.positionCount = nodes.Count;
+            lines.positionCount = nodes.Length;
 
-            for (var i = 0; i < nodes.Count; i++)
+            for (var i = 0; i < nodes.Length; i++)
             {
                 lines.SetPosition(i, nodes[i].position);
             }

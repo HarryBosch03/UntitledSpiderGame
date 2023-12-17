@@ -29,9 +29,10 @@ namespace Crabs.Player
         [SerializeField] [Range(0.0f, 1.0f)] private float bodyPartSmoothing = 0.8f;
 
         [Space]
-        [SerializeField] private Projectile web;
-        [SerializeField] private float webSpeed;
-        [SerializeField] private float webFireDelay;
+        [SerializeField] private Web web;
+        [SerializeField] private float webSpeed = 80.0f;
+        [SerializeField] private float webMaxLength = 30.0f;
+        [SerializeField] private float webFireDelay = 1.0f;
         
         private float lastJumpTime;
         private float lastWebTime;
@@ -129,18 +130,10 @@ namespace Crabs.Player
             if (!Web) return;
             if (Time.time - lastWebTime < webFireDelay) return;
 
-            var instance = (WebProjectile)web.Spawn(gameObject, transform.position, ReachVector, webSpeed, 0);
+            var instance = Instantiate(web);
+            instance.StartWeb(Body.position, ReachVector.normalized * webSpeed, webMaxLength);
+            instance.start = Body;
             lastWebTime = Time.time;
-
-            instance.anchor = null;
-            foreach (var l in legs)
-            {
-                if (!l.anchored) continue;
-                if (l.anchoredObject.gameObject.layer == 9) continue;
-                
-                instance.anchor = l.anchoredPosition;
-                break;
-            }
         }
 
         private void ResetFlags()
