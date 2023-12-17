@@ -7,7 +7,7 @@ namespace Crabs.Extras
 {
     public class Projectile : MonoBehaviour
     {
-        public const int ProjectileLayerMask = ~((1 << Web.WebLayer) | (1 << 8));
+        public const int ProjectileLayerMask = ~(1 << 8);
         
         [SerializeField] private float maxDistance = 200.0f;
 

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Crabs.Extras;
 using Crabs.Items;
+using Crabs.Utility;
 using UnityEngine;
 
 namespace Crabs.Player
@@ -11,7 +12,7 @@ namespace Crabs.Player
     public sealed class SpiderController : MonoBehaviour
     {
         private const float IgnoreGroundAfterJumpTime = 0.15f;
-        
+
         [SerializeField] private float moveSpeed = 10.0f;
         [SerializeField] private float accelerationTime = 0.1f;
         [Range(0.0f, 1.0f)]
@@ -25,22 +26,17 @@ namespace Crabs.Player
         [SerializeField] private float jumpForce = 25.0f;
 
         [Space]
-        [Range(0.0f, 1.0f)] public float legSmoothing = 0.3f;
-        [SerializeField] [Range(0.0f, 1.0f)] private float bodyPartSmoothing = 0.8f;
-
-        [Space]
         [SerializeField] private Web web;
-        [SerializeField] private float webSpeed = 80.0f;
-        [SerializeField] private float webMaxLength = 30.0f;
-        [SerializeField] private float webFireDelay = 1.0f;
-        
+
         private float lastJumpTime;
-        private float lastWebTime;
+        private LineRenderer webLines;
+
         public static event Action<SpiderController> DiedEvent;
 
         public static readonly List<SpiderController> All = new();
 
         #region Input
+
         public bool Reaching { get; private set; }
         public Vector2 ReachVector { get; set; }
         public Vector2 MoveDirection { get; set; }
@@ -48,8 +44,9 @@ namespace Crabs.Player
         public bool Drop { get; set; }
         public bool Jump { get; set; }
         public bool Web { get; set; }
+
         #endregion
-        
+
         public Vector2 GroundPoint { get; private set; }
         public Rigidbody2D Body { get; private set; }
         public float LegUpperLength { get; private set; }
@@ -59,7 +56,6 @@ namespace Crabs.Player
         public bool Anchored { get; private set; }
         public SpiderLeg ArmLeg => legs[0];
 
-        private Transform butt, head;
         private Transform[] legRoots = new Transform[4];
         private Transform[] legMids = new Transform[4];
         private Transform[] legTips = new Transform[4];
@@ -73,15 +69,15 @@ namespace Crabs.Player
             Body = GetComponent<Rigidbody2D>();
 
             var model = transform.Find("Model");
-            butt = model.Find("Butt");
-            head = model.Find("Head");
+
+            webLines = transform.Find<LineRenderer>("Webs");
 
             foreach (var r in GetComponentsInChildren<Renderer>())
             {
                 if (!r.CompareTag("SpiderColoredRenderer")) continue;
                 coloredBodyParts.Add(r);
             }
-            
+
             for (var i = 0; i < 4; i++)
             {
                 legRoots[i] = model.Find($"Leg.Root.{i}");
@@ -99,7 +95,7 @@ namespace Crabs.Player
         private void OnEnable()
         {
             All.Add(this);
-            
+
             foreach (var leg in legs) leg.OnEnable();
         }
 
@@ -114,7 +110,7 @@ namespace Crabs.Player
         private void FixedUpdate()
         {
             Reaching = ReachVector.magnitude > 0.2f;
-            
+
             Cast();
             Move();
             UpdateLegs();
@@ -127,13 +123,9 @@ namespace Crabs.Player
 
         private void FireWebs()
         {
-            if (!Web) return;
-            if (Time.time - lastWebTime < webFireDelay) return;
+            if (Web) web.Input(this, ReachVector);
 
-            var instance = Instantiate(web);
-            instance.StartWeb(Body.position, ReachVector.normalized * webSpeed, webMaxLength);
-            instance.start = Body;
-            lastWebTime = Time.time;
+            web.FixedUpdate(this, webLines);
         }
 
         private void ResetFlags()
@@ -141,20 +133,21 @@ namespace Crabs.Player
             Use = false;
             Drop = false;
             Jump = false;
+            Web = false;
         }
 
         public void PerformJump()
         {
             if (!Jump) return;
             if (!Anchored) return;
-            
+
             Vector2 direction;
             if (MoveDirection.magnitude > 0.5f) direction = MoveDirection;
             else direction = transform.up;
 
             var force = direction.normalized * jumpForce;
             Body.AddForce(force - Body.velocity, ForceMode2D.Impulse);
-                
+
             lastJumpTime = Time.time;
         }
 
@@ -179,22 +172,36 @@ namespace Crabs.Player
         public void Move()
         {
             var target = Vector2.ClampMagnitude(MoveDirection, 1.0f) * moveSpeed;
-            
-            if (Anchored)
+
+            var force = Vector2.zero;
+            var up = -transform.up;
+
+            if (web.CurrentState == Extras.Web.State.Attached)
             {
-                var force = (target - Body.velocity) * 2.0f / accelerationTime;
-                Body.AddForce((force - Physics2D.gravity * Body.gravityScale) * Body.mass);
+                var normal = (web.End - Body.position).normalized;
+                var tangent = new Vector2(-normal.y, normal.x);
                 
-                var groundVector = GroundPoint - Body.position;
-                var targetAngle = Mathf.Atan2(groundVector.y, groundVector.x) * Mathf.Rad2Deg + 90.0f;
-                var torque = Mathf.DeltaAngle(Body.rotation, targetAngle) * rotationSpring - Body.angularVelocity * rotationDamping;
-                Body.AddTorque(torque);
+                force += normal * (MoveDirection.y * moveSpeed * web.webClimbScale - Vector2.Dot(normal, Body.velocity)) * 2.0f / accelerationTime * web.webClimbScale;
+                force -= normal * Vector2.Dot(Physics2D.gravity * Body.gravityScale, normal);
+                force += tangent * MoveDirection.x * -Mathf.Sign(normal.y) * moveSpeed * 2.0f / accelerationTime * airMovement;
+            }
+            else if (Anchored)
+            {
+                force = (target - Body.velocity) * 2.0f / accelerationTime;
+                force -= Physics2D.gravity * Body.gravityScale;
+
+                up = GroundPoint - Body.position;
             }
             else
             {
-                var force = (target.x - Body.velocity.x) * (2.0f / accelerationTime) * airMovement * Mathf.Abs(MoveDirection.x);
-                Body.AddForce(Vector2.right * force * Body.mass);
+                force = Vector2.right * (target.x - Body.velocity.x) * (2.0f / accelerationTime) * airMovement * Mathf.Abs(MoveDirection.x);
             }
+
+            var targetAngle = Mathf.Atan2(up.y, up.x) * Mathf.Rad2Deg + 90.0f;
+            var torque = Mathf.DeltaAngle(Body.rotation, targetAngle) * rotationSpring - Body.angularVelocity * rotationDamping;
+            Body.AddTorque(torque);
+
+            Body.AddForce(force * Body.mass);
         }
 
         private void Cast()
@@ -204,21 +211,21 @@ namespace Crabs.Player
             var groundPoint = Vector2.zero;
             wallCasts.Clear();
             var hits = 0;
-            
+
             for (var i = 0; i < iterations; i++)
             {
                 var a = (i / (float)iterations) * Mathf.PI * 2.0f;
                 var v = new Vector2(Mathf.Cos(a), Mathf.Sin(a));
                 var hit = Physics2D.Raycast(Body.position, v, LegTotalLength, SpiderLeg.LegMask);
                 if (!hit) continue;
-                
+
                 wallCasts.Add(hit);
                 groundPoint += hit.point;
                 hits++;
             }
 
             if (hits == 0) return;
-            
+
             groundPoint /= hits;
             GroundPoint = groundPoint;
         }
@@ -234,7 +241,7 @@ namespace Crabs.Player
                 e.SetColor(color);
             }
         }
-        
+
         private void OnDrawGizmos()
         {
             Gizmos.color = Color.green;
@@ -245,7 +252,7 @@ namespace Crabs.Player
 
             for (var i = 0; i < legs.Count; i++)
             {
-                Gizmos.color = new []
+                Gizmos.color = new[]
                 {
                     Color.green,
                     Color.yellow,

@@ -66,7 +66,7 @@ namespace Crabs.Player
                 if (actions["Jump"].WasPerformedThisFrame()) ActiveController.Jump = true;
                 if (actions["Use"].WasPerformedThisFrame()) ActiveController.Use = true;
                 if (actions["Drop"].WasPerformedThisFrame()) ActiveController.Drop = true;
-                ActiveController.Web = actions["Web"].IsPressed();
+                if (actions["Web"].WasPerformedThisFrame()) ActiveController.Web = true;
 
                 if (useMouse)
                 {

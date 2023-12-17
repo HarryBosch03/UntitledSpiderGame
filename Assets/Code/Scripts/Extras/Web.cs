@@ -1,180 +1,122 @@
 using System;
-using System.Collections.Generic;
+using Crabs.Player;
 using UnityEngine;
 
 namespace Crabs.Extras
 {
-    public class Web : MonoBehaviour
+    [System.Serializable]
+    public class Web
     {
-        public const int WebLayer = 9;
-        private const int SubFrames = 6;
-        private const float NodeDistance = 0.2f;
-        private const float WebWidth = 0.05f;
+        private const float AnimationDuration = 0.1f;
+        private const float LineWidth = 0.1f;
 
-        private LineRenderer lines;
+        public float maxWebLength = 30.0f;
+        public float webClimbScale = 3.0f;
 
-        [HideInInspector] public Rigidbody2D start;
-        [HideInInspector] public Rigidbody2D end;
+        private float animation;
 
-        public Node[] nodes;
+        private RaycastHit2D hit;
 
-        private void Awake()
+        public State CurrentState { get; private set; } = State.Idle;
+        public Vector2 End => hit.point;
+
+        public void FixedUpdate(SpiderController spider, LineRenderer lines)
         {
-            lines = GetComponentInChildren<LineRenderer>();
+            var body = spider.Body;
+
+            if (CurrentState == State.Attached)
+            {
+                var distance = (hit.point - body.position).magnitude; 
+                if (distance > maxWebLength)
+                {
+                    var direction = (body.position - hit.point).normalized;
+
+                    body.position = hit.point + direction * maxWebLength;
+                    body.velocity += direction * Mathf.Max(0.0f, -Vector2.Dot(direction, body.velocity));
+                }
+                if (distance < 2.0f)
+                {
+                    Detach();
+                    animation = 0.0f;
+                }
+            }
+
+            AnimateLines(spider, lines);
+
+            animation += (CurrentState != State.Idle ? 1.0f : -1.0f) / AnimationDuration * Time.deltaTime;
+            if (animation >= 1.0f)
+            {
+                if (CurrentState == State.Casting)
+                {
+                    CurrentState = State.Attached;
+                }
+
+                animation = 1.0f;
+            }
+            else if (animation <= 0.0f) animation = 0.0f;
+        }
+
+        private void AnimateLines(SpiderController spider, LineRenderer lines)
+        {
             lines.useWorldSpace = true;
-            lines.startWidth = WebWidth;
-            lines.endWidth = WebWidth;
+            lines.positionCount = 128;
 
-            transform.position = Vector3.zero;
-            transform.rotation = Quaternion.identity;
+            var distance = (spider.Body.position - hit.point).magnitude;
+            lines.startWidth = maxWebLength * LineWidth / (distance + maxWebLength * 0.5f);
+            lines.endWidth = lines.startWidth;
 
-            foreach (var t in GetComponentsInChildren<Transform>())
+            var start = spider.Body.position;
+            var end = hit.point;
+
+            var normal = (end - start).normalized;
+            var tangent = new Vector2(-normal.y, normal.x);
+
+            for (var i = 0; i < lines.positionCount; i++)
             {
-                t.gameObject.layer = WebLayer;
+                var p = i / (lines.positionCount - 1.0f);
+
+                var a1 = Mathf.InverseLerp(0.0f, 0.6f, animation);
+                var a2 = Mathf.InverseLerp(0.4f, 1.0f, animation);
+
+                lines.SetPosition(i, Vector2.Lerp(start, end, p * a1) + tangent * (Mathf.PerlinNoise(p * 3.0f, 0.5f) * 2.0f - 1.0f) * 3.0f * (1.0f - a2) * Mathf.Clamp01(animation * 10.0f));
             }
         }
 
-        public void StartWeb(Vector2 position, Vector2 velocity, float totalLength)
+        public void Input(SpiderController spider, Vector2 direction)
         {
-            var nodeCount = Mathf.Max(Mathf.CeilToInt(totalLength / NodeDistance), 2);
-            nodes = new Node[nodeCount];
+            direction.Normalize();
 
-            for (var i = 0; i < nodes.Length; i++)
+            switch (CurrentState)
             {
-                var p = i / (nodes.Length - 1.0f);
-
-                nodes[i] = new Node(position + velocity * Time.fixedDeltaTime * p, velocity * p);
-            }
-        }
-
-        private void FixedUpdate()
-        {
-            Constrain();
-            Iterate();
-        }
-
-        private void Collide()
-        {
-            for (var i = 0; i < nodes.Length; i++)
-            {
-                var node = nodes[i];
-
-                var direction = node.position - node.lastPosition1;
-                var length = direction.magnitude;
-                direction /= length;
-
-                if (length > WebWidth * 0.5f)
+                case State.Idle:
                 {
-                    var hit = Physics2D.CircleCast(node.lastPosition1, WebWidth * 0.5f, direction, length, 0b1);
-                    if (hit)
-                    {
-                        node.position = hit.collider.ClosestPoint(hit.point);
-                        node.lastPosition1 = node.position;
-                        node.lastPosition2 = node.position;
-                    }
+                    var start = spider.Body.position;
+                    hit = Physics2D.Raycast(start, direction, maxWebLength, 0b1);
+                    if (hit) CurrentState = State.Casting;
+                    break;
                 }
-
-                var c = Physics2D.OverlapCircle(node.position, WebWidth * 0.5f, 0b1);
-                if (c)
+                case State.Casting:
                 {
-                    node.position = c.ClosestPoint(node.position);
-                    node.lastPosition1 = node.position;
-                    node.lastPosition2 = node.position;
+                    Detach();
+                    break;
                 }
-
-                nodes[i] = node;
-            }
-        }
-
-        private void Iterate()
-        {
-            for (var i = 0; i < nodes.Length; i++)
-            {
-                var node = nodes[i];
-                if (node.anchored)
+                case State.Attached:
                 {
-                    node.lastPosition1 = node.position;
+                    Detach();
+                    break;
                 }
-                else
-                {
-                    node.lastPosition2 = nodes[i].lastPosition1 + Physics2D.gravity * Time.deltaTime;
-                    node.lastPosition1 = nodes[i].position;
-
-                    var velocity = nodes[i].position - nodes[i].lastPosition1;
-                    var acceleration = velocity - (nodes[i].lastPosition1 - nodes[i].lastPosition2);
-
-                    node.position = nodes[i].position + velocity + acceleration * Time.deltaTime * 0.5f;
-                }
-
-                nodes[i] = node;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
         }
 
-        private void Constrain()
+        private void Detach() { CurrentState = State.Idle; }
+
+        public enum State
         {
-            for (var i = 0; i < SubFrames; i++)
-            {
-                for (var j = 0; j < nodes.Length - 1; j++)
-                {
-                    var a = nodes[j];
-                    var b = nodes[j + 1];
-
-                    var diff = b.position - a.position;
-                    var dir = diff.normalized;
-                    var center = (a.position + b.position) * 0.5f;
-
-                    if (diff.magnitude > NodeDistance)
-                    {
-                        a.position = center - dir * NodeDistance * 0.5f;
-                        b.position = center + dir * NodeDistance * 0.5f;
-                    }
-
-                    if (!a.anchored) nodes[j] = a;
-                    if (!b.anchored) nodes[j + 1] = b;
-                }
-                
-                Collide();
-            }
-        }
-
-        private void Update()
-        {
-            lines.positionCount = nodes.Length;
-
-            for (var i = 0; i < nodes.Length; i++)
-            {
-                lines.SetPosition(i, nodes[i].position);
-            }
-        }
-
-        private void OnDrawGizmosSelected()
-        {
-            foreach (var n in nodes)
-            {
-                Gizmos.DrawSphere(n.position, WebWidth * 6.0f);
-            }
-        }
-
-        public struct Node
-        {
-            public Vector2 lastPosition2;
-            public Vector2 lastPosition1;
-            public Vector2 position;
-            public bool anchored;
-
-            public Node(Vector2 position) : this()
-            {
-                lastPosition2 = position;
-                lastPosition1 = position;
-                this.position = position;
-            }
-
-            public Node(Vector2 position, Vector2 velocity) : this()
-            {
-                this.position = position;
-                lastPosition1 = position - velocity * Time.fixedDeltaTime;
-                lastPosition2 = lastPosition1 - velocity * Time.fixedDeltaTime;
-            }
+            Idle,
+            Casting,
+            Attached,
         }
     }
 }
