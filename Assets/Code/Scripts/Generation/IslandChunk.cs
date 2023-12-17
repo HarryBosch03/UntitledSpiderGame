@@ -42,6 +42,25 @@ namespace Crabs.Generation
             materialProperties = new MaterialPropertyBlock();
         }
 
+        private void OnEnable()
+        {
+            MapData.ChangeEvent += OnMapDataChanged;
+        }
+
+        private void OnDisable()
+        {
+            MapData.ChangeEvent -= OnMapDataChanged;
+        }
+
+        private void OnMapDataChanged(MapData data, int x, int y)
+        {
+            if (data != mapData) return;
+            if (x < min.x || x >= max.x) return;
+            if (y < min.y || y >= max.y) return;
+            
+            MarkDirty(x, y);
+        }
+
         private void Update()
         {
             materialProperties.SetColor("_Debug", new Color(1.0f, 0.0f, 0.0f, Mathf.Clamp01(1.0f - (Time.time - debugTime) * 2.0f)));
@@ -230,6 +249,13 @@ namespace Crabs.Generation
                 mapData.Apply();
                 GenerateMesh();
             }
+            
+            for (var x = min.x; x < max.x; x++)
+            for (var y = min.y; y < max.y; y++)
+            {
+                var tile = mapData[x, y];
+                tile?.Tick();
+            }
         }
 
         public void Damage(int damage, Vector2 point, Vector2 direction)
@@ -247,7 +273,6 @@ namespace Crabs.Generation
         public void Damage(int damage, int x, int y)
         {
             mapData.Damage(damage, x, y);
-            MarkDirty(x, y);
         }
 
         public void SetTile(Tile tile, Vector2 point)
@@ -256,10 +281,10 @@ namespace Crabs.Generation
             var min = Vector2Int.FloorToInt(point);
             var max = min + Vector2Int.one;
 
-            mapData[min.x, min.y] = new Tile(tile);
-            mapData[max.x, min.y] = new Tile(tile);
-            mapData[min.x, max.y] = new Tile(tile);
-            mapData[max.x, max.y] = new Tile(tile);
+            mapData[min.x, min.y] = tile.Clone();
+            mapData[max.x, min.y] = tile.Clone();
+            mapData[min.x, max.y] = tile.Clone();
+            mapData[max.x, max.y] = tile.Clone();
         }
 
         public void MarkDirty(int x, int y)

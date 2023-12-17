@@ -1,4 +1,6 @@
 using Crabs.Extras;
+using Crabs.Generation;
+using Crabs.Generation.Tiles;
 using UnityEngine;
 
 namespace Crabs.Player
@@ -6,20 +8,16 @@ namespace Crabs.Player
     [SelectionBase, DisallowMultipleComponent]
     public sealed class WebProjectile : Projectile
     {
-        public Web web;
+        public WebTile webTile;
 
-        private Vector2 webPosition;
-
-        private void Start()
+        protected override void ProcessHit(RaycastHit2D hit)
         {
-            web = Instantiate(web);
-            web.StartWeb(transform.position);
-        }
+            base.ProcessHit(hit);
 
-        protected override void FixedUpdate()
-        {
-            base.FixedUpdate();
-            web.Catchup(transform.position, velocity);
+            var island = hit.collider.GetComponentInParent<IslandChunk>();
+            if (!island) return;
+            
+            island.SetTile(webTile, hit.point);
         }
     }
 }

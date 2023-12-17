@@ -18,13 +18,15 @@ namespace Crabs.Generation
         private static readonly int MapWidth = Shader.PropertyToID("_MapWidth");
         private static readonly int MapHeight = Shader.PropertyToID("_MapHeight");
 
+        public static event Action<MapData, int, int> ChangeEvent;
+        
         public MapData(int width, int height, float unitScale)
         {
             this.width = width;
             this.height = height;
             this.unitScale = unitScale;
             tiles = new Tile[width * height];
-            
+
             texture = new Texture2D(width, height, DefaultFormat.HDR, TextureCreationFlags.None);
             texture.hideFlags = HideFlags.HideAndDontSave;
         }
@@ -37,7 +39,7 @@ namespace Crabs.Generation
         public MapData Apply()
         {
             texture.Apply();
-            
+
             Shader.SetGlobalTexture(MapWeights, texture);
             Shader.SetGlobalInt(MapWidth, width);
             Shader.SetGlobalInt(MapHeight, height);
@@ -46,11 +48,23 @@ namespace Crabs.Generation
 
         public Tile this[int x, int y]
         {
-            get => tiles[x + y * width];
+            get
+            {
+                if (x < 0 || x >= width) return null;
+                if (y < 0 || y >= height) return null;
+
+                return tiles[x + y * width];
+            }
             set
             {
                 tiles[x + y * width] = value;
                 texture.SetPixel(x, y, value?.color ?? Color.clear);
+
+                if (value == null) return;
+                
+                value.x = x;
+                value.y = y;
+                value.data = this;
             }
         }
 
@@ -67,9 +81,9 @@ namespace Crabs.Generation
         {
             var tile = this[x, y];
             if (tile == null) return;
-            
-            tile.health -= damage;
-            if (tile.health <= 0) this[x, y] = null;
+
+            if (tile.Damage(damage)) this[x, y] = null;
+            ChangeEvent?.Invoke(this, x, y);
         }
     }
 }

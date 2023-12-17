@@ -43,7 +43,7 @@ namespace Crabs.Generation
                 value = Mathf.Lerp(0.1f, value, deadzone);
 
                 if (value > 0.0f) continue;
-                map[x, y] = new Tile(tile);
+                map[x, y] = tile.Clone();
             }
 
             return map.Apply();

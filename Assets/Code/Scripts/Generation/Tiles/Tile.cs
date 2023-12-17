@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace Crabs.Generation.Tiles
 {
@@ -7,7 +6,9 @@ namespace Crabs.Generation.Tiles
     public class Tile
     {
         public Color color;
-        public int health;
+        private int health;
+        public int x, y;
+        public MapData data;
 
         public Tile()
         {
@@ -20,7 +21,17 @@ namespace Crabs.Generation.Tiles
             this.color = color;
             this.health = health;
         }
-        
-        public Tile(Tile tile) : this(tile.color, tile.health) { }
+
+        public virtual void Tick() { }
+
+        public virtual bool Damage(int damage)
+        {
+            if (health <= 0) return true;
+            
+            health -= damage;
+            return health <= 0;
+        }
+
+        public Tile Clone() => (Tile)MemberwiseClone();
     }
 }

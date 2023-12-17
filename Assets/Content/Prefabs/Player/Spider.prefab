@@ -131,7 +131,7 @@ MonoBehaviour:
   bodyPartSmoothing: 0.8
   web: {fileID: 8194483552750935243, guid: 0ed3626f71adabf4db352f6023f6739a, type: 3}
   webSpeed: 80
-  webFireDelay: 1
+  webFireDelay: 0.1
 --- !u!114 &4470308104192520110
 MonoBehaviour:
   m_ObjectHideFlags: 0
