@@ -232,16 +232,16 @@ namespace Crabs.Generation
             }
         }
 
-        public void Damage(int damage, Vector2 point, Vector2 direction)
+        public void Damage(DamageArgs damage, Vector2 point, Vector2 direction)
         {
             point /= mapData.unitScale;
             var min = Vector2Int.FloorToInt(point);
             var max = min + Vector2Int.one;
 
-            Damage(damage, min.x, min.y);
-            Damage(damage, max.x, min.y);
-            Damage(damage, min.x, max.y);
-            Damage(damage, max.x, max.y);
+            Damage(damage.damage, min.x, min.y);
+            Damage(damage.damage, max.x, min.y);
+            Damage(damage.damage, min.x, max.y);
+            Damage(damage.damage, max.x, max.y);
         }
 
         public void Damage(int damage, int x, int y)

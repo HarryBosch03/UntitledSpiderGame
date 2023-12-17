@@ -9,7 +9,7 @@ namespace Crabs.Player
     {
         public Projectile prefab;
         public Transform prefabSpawnPoint;
-        public int damage;
+        public DamageArgs damage;
         public float muzzleSpeed;
         public float fireDelay;
         public int maxAmmo;
@@ -18,23 +18,18 @@ namespace Crabs.Player
         [Space]
         public float recoilResponse;
         public float recoilDecay;
-        
+        public float recoilForce;
+
         [HideInInspector] public int ammo;
-        
+
         private SpiderController controller;
         private float lastFireTime;
 
         public bool Shoot { get; set; }
-        
-        private void Awake()
-        {
-            controller = GetComponent<SpiderController>();
-        }
 
-        private void OnEnable()
-        {
-            ammo = maxAmmo;
-        }
+        private void Awake() { controller = GetComponent<SpiderController>(); }
+
+        private void OnEnable() { ammo = maxAmmo; }
 
         private void FixedUpdate()
         {
@@ -50,11 +45,19 @@ namespace Crabs.Player
             var leg = controller.ArmLeg;
             var reach = controller.ReachVector;
 
-            var position = controller.Body.position + Vector2.ClampMagnitude(reach, leg.lengthTotal);
-            position -= reach.normalized * Mathf.Pow(2.0f, -(Time.time - lastFireTime) * recoilDecay) * recoilResponse; 
-            
-            leg.OverridePosition = position;
-            leg.OverrideDirection = reach;
+            if (controller.Reaching)
+            {
+                var position = controller.Body.position + Vector2.ClampMagnitude(reach, leg.lengthTotal);
+                position -= reach.normalized * Mathf.Pow(2.0f, -(Time.time - lastFireTime) * recoilDecay) * recoilResponse;
+
+                leg.OverridePosition = position;
+                leg.OverrideDirection = reach;
+            }
+            else
+            {
+                leg.OverridePosition = null;
+                leg.OverrideDirection = null;
+            }
         }
 
         private void ResetFlags() { Shoot = false; }
@@ -69,9 +72,12 @@ namespace Crabs.Player
 
         private void TryShoot()
         {
-            if (Shoot && Time.time - lastFireTime > fireDelay && ammo > 0)
+            if (Shoot && Time.time - lastFireTime > fireDelay && ammo > 0 && controller.Reaching)
             {
                 prefab.Spawn(gameObject, prefabSpawnPoint.position, controller.ReachVector.normalized, muzzleSpeed, damage);
+                
+                controller.Body.AddForce(-controller.ReachVector.normalized * recoilForce, ForceMode2D.Impulse);
+                
                 ammo--;
                 lastFireTime = Time.time;
             }

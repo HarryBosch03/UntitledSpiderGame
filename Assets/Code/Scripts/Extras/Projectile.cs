@@ -11,7 +11,7 @@ namespace Crabs.Extras
         
         [SerializeField] private float maxDistance = 200.0f;
 
-        public int damage;
+        public DamageArgs damage;
 
         public Vector2 velocity;
         private Vector2 force;
@@ -23,7 +23,7 @@ namespace Crabs.Extras
 
         private GameObject Shooter;
 
-        public Projectile Spawn(GameObject shooter, Vector2 position, Vector2 direction, float muzzleSpeed, int damage)
+        public Projectile Spawn(GameObject shooter, Vector2 position, Vector2 direction, float muzzleSpeed, DamageArgs damage)
         {
             var instance = Instantiate(this);
             instance.Shooter = shooter;

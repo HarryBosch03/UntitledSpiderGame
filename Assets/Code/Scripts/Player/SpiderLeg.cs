@@ -5,7 +5,7 @@ namespace Crabs.Player
     public class SpiderLeg
     {
         public const int LegMask = 0b1 | (1 << 9);
-        
+
         private const int IkIterations = 500;
         private const float Smoothing = 0.4f;
 
@@ -23,10 +23,8 @@ namespace Crabs.Player
         public Vector2 localRestPosition;
         public Vector2 anchoredPosition;
         public bool anchored;
-        public Collider2D anchoredObject;
         public float length0, length1, lengthTotal;
 
-        public bool controlled;
         public bool forceNoAnchor;
 
         public SpiderLeg(SpiderController spider, Transform rootTransform, Transform midTransform, int i, bool controlled)
@@ -34,7 +32,6 @@ namespace Crabs.Player
             Spider = spider;
             this.rootTransform = rootTransform;
             this.midTransform = midTransform;
-            this.controlled = controlled;
 
             tipTransform = midTransform.GetChild(0);
             stepDust = tipTransform.GetComponentInChildren<ParticleSystem>();
@@ -67,18 +64,8 @@ namespace Crabs.Player
                 target = OverridePosition.Value;
                 return;
             }
-            
-            if (controlled && Spider.Reaching)
-            {
-                anchored = false;
-                target = Spider.Body.position + Spider.ReachVector;
-                tipTransform.right = Spider.ReachVector;
-                Collide(ref target);
-            }
-            else
-            {
-                target = anchoredPosition;
-            }
+
+            target = anchoredPosition;
         }
 
         private void Collide(ref Vector2 end)
@@ -93,17 +80,16 @@ namespace Crabs.Player
         private void UpdateAnchor()
         {
             if (Locked) return;
-            if (controlled) return;
-            
+
             var restPosition = Spider.Body.position + localRestPosition * Spider.LegTotalLength * 0.75f;
-            
+
             if (forceNoAnchor)
             {
                 anchored = false;
                 anchoredPosition = restPosition;
                 return;
             }
-            
+
             if (anchored)
             {
                 if ((anchoredPosition - Spider.Body.position).magnitude > Spider.LegTotalLength)
@@ -115,7 +101,7 @@ namespace Crabs.Player
                 {
                     anchored = false;
                 }
-                
+
                 return;
             }
 
@@ -137,7 +123,6 @@ namespace Crabs.Player
                 {
                     best = score;
                     anchoredPosition = cast.point;
-                    anchoredObject = cast.collider;
                     anchored = true;
                 }
             }
@@ -153,13 +138,13 @@ namespace Crabs.Player
             smoothedRoot = Vector2.Lerp(root, smoothedRoot, Smoothing);
             smoothedMid = Vector2.Lerp(mid, smoothedMid, Smoothing);
             smoothedTip = Vector2.Lerp(tip, smoothedTip, Smoothing);
-            
+
             rootTransform.position = new Vector3(smoothedRoot.x, smoothedRoot.y, rootTransform.position.z);
             rootTransform.right = smoothedMid - smoothedRoot;
 
             midTransform.position = new Vector3(smoothedMid.x, smoothedMid.y, midTransform.position.z);
             midTransform.right = smoothedTip - smoothedMid;
-            
+
             tipTransform.right = OverrideDirection ?? midTransform.right;
         }
 
@@ -170,7 +155,7 @@ namespace Crabs.Player
             var rootTarget = Spider.Body.position;
 
             mid = Spider.transform.position + Spider.transform.up;
-            
+
             var flipped = false;
             for (var i = 0; i < IkIterations; i++)
             {

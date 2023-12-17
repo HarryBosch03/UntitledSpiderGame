@@ -22,6 +22,7 @@ namespace Crabs.Player
         };
         
         public InputActionAsset inputAsset;
+        public float gamepadCursorDistance = 5.0f;
         [FormerlySerializedAs("spiderWeapon")] public Gun gun;
 
         private int playerIndex;
@@ -65,7 +66,7 @@ namespace Crabs.Player
             if (ActiveSpider)
             {
                 ActiveSpider.MoveDirection = actions["Move"].ReadValue<Vector2>();
-                ActiveSpider.ReachVector = actions["Reach"].ReadValue<Vector2>();
+                ActiveSpider.ReachVector = actions["Reach"].ReadValue<Vector2>() * gamepadCursorDistance;
                 if (actions["Jump"].WasPerformedThisFrame()) ActiveSpider.Jump = true;
                 if (actions["Web"].WasPerformedThisFrame()) ActiveSpider.Web = true;
                 

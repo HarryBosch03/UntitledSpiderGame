@@ -16,7 +16,10 @@ namespace Crabs.Level
                 if (e.transform.position.y > height) continue;
 
                 var damageable = e.GetComponent<IDamagable>();
-                damageable.Damage(1, e.transform.position, Vector2.up);
+                damageable.Damage(new DamageArgs
+                {
+                    damage = 1
+                }, e.transform.position, Vector2.up);
             }
         }
 

@@ -75,7 +75,10 @@ namespace Crabs.GameModes
             if (Keyboard.current.enterKey.wasPressedThisFrame)
             {
                 var target = FindObjectOfType<SpiderHealth>();
-                target.Damage(9999, target.transform.position, Vector2.up);
+                target.Damage(new DamageArgs
+                {
+                    damage = 9999
+                }, target.transform.position, Vector2.up);
             }
         }
 

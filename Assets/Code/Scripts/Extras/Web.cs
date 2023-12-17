@@ -36,10 +36,15 @@ namespace Crabs.Extras
                     body.position = hit.point + direction * maxWebLength;
                     body.velocity += direction * Mathf.Max(0.0f, -Vector2.Dot(direction, body.velocity));
                 }
+                
                 if (distance < 2.0f)
                 {
                     Detach();
                     animation = 0.0f;
+                }
+                if (Vector2.Dot(hit.normal, body.position - hit.point) < 0.0f)
+                {
+                    Detach();
                 }
             }
 

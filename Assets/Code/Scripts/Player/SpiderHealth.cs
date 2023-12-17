@@ -9,11 +9,15 @@ namespace Crabs.Player
         public int currentHealth;
         public int maxHealth;
 
+        private Rigidbody2D body;
+
         private ParticleSystem hitEffect;
         private ParticleSystem deathEffect;
 
         private void Awake()
         {
+            body = GetComponent<Rigidbody2D>();
+            
             deathEffect = transform.Find<ParticleSystem>("DeathFX");
             hitEffect = transform.Find<ParticleSystem>("HitFX");
         }
@@ -28,11 +32,12 @@ namespace Crabs.Player
         public int CurrentHealth => currentHealth;
         public int MaxHealth => maxHealth;
 
-        public void Damage(int damage, Vector2 point, Vector2 direction)
+        public void Damage(DamageArgs damage, Vector2 point, Vector2 direction)
         {
-            if (damage <= 0) return;
+            if (damage.damage <= 0) return;
             
-            currentHealth -= damage;
+            currentHealth -= damage.damage;
+            body.AddForce(direction.normalized * damage.knockback, ForceMode2D.Impulse);
 
             HealthChangedEvent?.Invoke();
             

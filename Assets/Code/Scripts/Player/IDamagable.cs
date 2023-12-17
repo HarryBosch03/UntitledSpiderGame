@@ -10,6 +10,6 @@ namespace Crabs.Player
         int CurrentHealth { get; }
         int MaxHealth { get; }
         
-        void Damage(int damage, Vector2 point, Vector2 direction);
+        void Damage(DamageArgs damage, Vector2 point, Vector2 direction);
     }
 }

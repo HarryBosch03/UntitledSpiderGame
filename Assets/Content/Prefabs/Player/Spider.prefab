@@ -290,13 +290,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   prefab: {fileID: 9092994082209271172, guid: feb55d0c82e05e04987ebc9d061c2e32, type: 3}
   prefabSpawnPoint: {fileID: 2339694442773294706}
-  damage: 1
+  damage:
+    damage: 1
+    knockback: 10
   muzzleSpeed: 35
   fireDelay: 0.02
   maxAmmo: 7
   reloadTime: 1
   recoilResponse: 1.2
   recoilDecay: 45
+  recoilForce: 7
   ammo: 7
 --- !u!1 &4640013249685051605
 GameObject:
