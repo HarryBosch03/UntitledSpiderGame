@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UntitledSpiderGame.Runtime.Player;
+using UntitledSpiderGame.Runtime.Spider;
 using Random = UnityEngine.Random;
 
 namespace UntitledSpiderGame.Runtime.GameModes

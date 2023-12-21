@@ -1,4 +1,5 @@
 using UnityEngine;
+using UntitledSpiderGame.Runtime.Spider;
 
 namespace UntitledSpiderGame.Runtime.Player
 {

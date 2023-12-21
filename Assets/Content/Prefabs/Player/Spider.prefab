@@ -192,6 +192,8 @@ GameObject:
   - component: {fileID: 3373450816341298518}
   - component: {fileID: 4470308104192520110}
   - component: {fileID: 5121861374919411459}
+  - component: {fileID: 7568559091892943509}
+  - component: {fileID: 7662201884724152477}
   m_Layer: 7
   m_Name: Spider
   m_TagString: Untagged
@@ -253,15 +255,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3f91d7234741bc44b8acee16fe038dc5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 10
-  accelerationTime: 0.3
-  airMovement: 0.2
-  rotationSpring: 0.2
-  rotationDamping: 0.05
-  jumpForce: 30
-  web:
-    maxWebLength: 30
-    webForce: 200
+  stats: {fileID: 0}
 --- !u!114 &4470308104192520110
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -288,19 +282,38 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 508db8a27abd4e1d9ca41e6aec367599, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ammo: 7
   prefab: {fileID: 9092994082209271172, guid: feb55d0c82e05e04987ebc9d061c2e32, type: 3}
   prefabSpawnPoint: {fileID: 2339694442773294706}
-  damage:
-    damage: 1
-    knockback: 10
-  muzzleSpeed: 35
-  fireDelay: 0.02
-  maxAmmo: 7
-  reloadTime: 1
-  recoilResponse: 1.2
-  recoilDecay: 45
-  recoilForce: 7
-  ammo: 7
+--- !u!114 &7568559091892943509
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3373450816341298512}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0e83f2a7bd224cf2906ff8200a4f6476, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  accelerationTime: 0.1
+  airMovement: 0.2
+  rotationSpring: 0.2
+  rotationDamping: 0.05
+  jumpForce: 25
+--- !u!114 &7662201884724152477
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3373450816341298512}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 08ca4014e2b5489d9da982e4f247dd86, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &4640013249685051605
 GameObject:
   m_ObjectHideFlags: 0
@@ -435,7 +448,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.75}
   m_AnchorMax: {x: 0.5, y: 0.75}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 300, y: 30}
+  m_SizeDelta: {x: 300, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &3734709884808731920
 CanvasRenderer:

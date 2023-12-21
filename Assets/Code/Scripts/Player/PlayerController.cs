@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Serialization;
+using UntitledSpiderGame.Runtime.Spider;
 
 namespace UntitledSpiderGame.Runtime.Player
 {
@@ -24,7 +25,7 @@ namespace UntitledSpiderGame.Runtime.Player
         public InputActionAsset inputAsset;
         public float gamepadCursorDistance = 5.0f;
 
-        private Gun gun;
+        private SpiderWeapon spiderWeapon;
         private int playerIndex;
         private bool useMouse;
         private Camera mainCamera;
@@ -88,8 +89,8 @@ namespace UntitledSpiderGame.Runtime.Player
                 if (actions["Jump"].WasPerformedThisFrame()) ActiveSpider.Jump = true;
                 if (actions["Web"].WasPerformedThisFrame()) ActiveSpider.Web = true;
 
-                if (actions["Use"].WasPerformedThisFrame()) gun.Shoot = true;
-                if (actions["Use"].WasReleasedThisFrame()) gun.Shoot = false;
+                if (actions["Use"].WasPerformedThisFrame()) spiderWeapon.Shoot = true;
+                if (actions["Use"].WasReleasedThisFrame()) spiderWeapon.Shoot = false;
 
                 if (useMouse)
                 {
@@ -125,7 +126,7 @@ namespace UntitledSpiderGame.Runtime.Player
             ActiveSpider = spider;
             spider.SetColor(PlayerColors[playerIndex]);
 
-            gun = spider.GetComponent<Gun>();
+            spiderWeapon = spider.GetComponent<SpiderWeapon>();
         }
     }
 }

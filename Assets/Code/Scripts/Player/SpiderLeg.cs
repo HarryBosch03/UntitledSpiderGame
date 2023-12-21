@@ -1,4 +1,5 @@
 using UnityEngine;
+using UntitledSpiderGame.Runtime.Spider;
 
 namespace UntitledSpiderGame.Runtime.Player
 {
@@ -12,7 +13,7 @@ namespace UntitledSpiderGame.Runtime.Player
         public Transform rootTransform, midTransform, tipTransform;
         public ParticleSystem stepDust;
 
-        public SpiderController Spider { get; }
+        public SpiderMovement Movement { get; }
         public Vector2? OverridePosition { get; set; }
         public Vector2? OverrideDirection { get; set; }
         public bool Locked { get; set; }
@@ -27,9 +28,9 @@ namespace UntitledSpiderGame.Runtime.Player
 
         public bool forceNoAnchor;
 
-        public SpiderLeg(SpiderController spider, Transform rootTransform, Transform midTransform, int i, bool controlled)
+        public SpiderLeg(SpiderMovement movement, Transform rootTransform, Transform midTransform, int i)
         {
-            Spider = spider;
+            Movement = movement;
             this.rootTransform = rootTransform;
             this.midTransform = midTransform;
 
@@ -47,7 +48,7 @@ namespace UntitledSpiderGame.Runtime.Player
         public void FixedUpdate(bool forceNoAnchor)
         {
             this.forceNoAnchor = forceNoAnchor;
-            root = Spider.Body.position;
+            root = Movement.Spider.Body.position;
 
             UpdateAnchor();
             UpdateTarget();
@@ -61,27 +62,28 @@ namespace UntitledSpiderGame.Runtime.Player
             if (OverridePosition.HasValue)
             {
                 anchored = false;
-                target = OverridePosition.Value;
+                target = Collide(OverridePosition.Value);
                 return;
             }
 
             target = anchoredPosition;
         }
 
-        private void Collide(ref Vector2 end)
+        private Vector2 Collide(Vector2 end)
         {
             var hit = Physics2D.Linecast(root, end, LegMask);
             if (hit)
             {
-                end = hit.point;
+                return hit.point;
             }
+            return end;
         }
 
         private void UpdateAnchor()
         {
             if (Locked) return;
 
-            var restPosition = Spider.Body.position + localRestPosition * Spider.LegTotalLength * 0.75f;
+            var restPosition = Movement.Spider.Body.position + localRestPosition * Movement.LegTotalLength * 0.75f;
 
             if (forceNoAnchor)
             {
@@ -92,7 +94,7 @@ namespace UntitledSpiderGame.Runtime.Player
 
             if (anchored)
             {
-                if ((anchoredPosition - Spider.Body.position).magnitude > Spider.LegTotalLength)
+                if ((anchoredPosition - Movement.Spider.Body.position).magnitude > Movement.LegTotalLength)
                 {
                     anchored = false;
                 }
@@ -108,10 +110,10 @@ namespace UntitledSpiderGame.Runtime.Player
             anchoredPosition = restPosition;
 
             var best = 0.2f;
-            foreach (var cast in Spider.wallCasts)
+            foreach (var cast in Movement.wallCasts)
             {
                 var score = float.MaxValue;
-                foreach (var leg in Spider.legs)
+                foreach (var leg in Movement.Spider.Legs)
                 {
                     if (leg == this) continue;
                     if (!leg.anchored) continue;
@@ -150,11 +152,11 @@ namespace UntitledSpiderGame.Runtime.Player
 
         private void IK()
         {
-            var upperLength = Spider.LegUpperLength;
-            var lowerLength = Spider.LegLowerLength;
-            var rootTarget = Spider.Body.position;
+            var upperLength = Movement.LegUpperLength;
+            var lowerLength = Movement.LegLowerLength;
+            var rootTarget = Movement.Spider.Body.position;
 
-            mid = Spider.transform.position + Spider.transform.up;
+            mid = Movement.transform.position + Movement.transform.up;
 
             var flipped = false;
             for (var i = 0; i < IkIterations; i++)

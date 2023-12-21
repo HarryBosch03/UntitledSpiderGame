@@ -603,7 +603,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerControllerPrefab: {fileID: 3666330943009632825, guid: 7d7596922cd3b634dbe8568613035dc4, type: 3}
   spiderPrefab: {fileID: 3373450816341298518, guid: ce0e604c60b205746b090841d21d2c79, type: 3}
-  respawnTime: 3
+  settings: {fileID: 11400000, guid: 3fa68865c7d37d445aecc6192fd91b99, type: 2}
   spawnMin: 50
   spawnMax: 250
   spawnHeight: 100
@@ -632,6 +632,8 @@ MonoBehaviour:
       m_Action: Join
       m_Flags: 0
     m_Flags: 0
+  players: []
+  scores: 
 --- !u!4 &1589090689
 Transform:
   m_ObjectHideFlags: 0

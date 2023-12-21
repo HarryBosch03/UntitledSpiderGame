@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UntitledSpiderGame.Runtime.Player;
+using UntitledSpiderGame.Runtime.Spider;
 
 namespace UntitledSpiderGame.Runtime.Level
 {
