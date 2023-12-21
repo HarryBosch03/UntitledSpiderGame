@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 using UntitledSpiderGame.Runtime.Generation.Tiles;
+using UntitledSpiderGame.Runtime.Player;
 using Object = UnityEngine.Object;
 
 namespace UntitledSpiderGame.Runtime.Generation
@@ -63,12 +64,12 @@ namespace UntitledSpiderGame.Runtime.Generation
             }
         }
 
-        public void Damage(int damage, int x, int y)
+        public void Damage(float damage, int x, int y)
         {
             var tile = this[x, y];
             if (tile == null) return;
             
-            tile.health -= damage;
+            tile.health -= IDamagable.Round(damage);
             if (tile.health <= 0) this[x, y] = null;
         }
     }

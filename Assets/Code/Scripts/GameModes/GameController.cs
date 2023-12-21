@@ -62,7 +62,8 @@ namespace UntitledSpiderGame.Runtime.GameModes
         {
             yield return new WaitForSeconds(settings.respawnTime);
 
-            var spider = Instantiate(spiderPrefab);
+            var spider = player.ActiveSpider;
+            spider.gameObject.SetActive(true);
             spider.transform.position = GetSpawnPoint();
             spider.gameObject.SetActive(true);
             
@@ -71,10 +72,10 @@ namespace UntitledSpiderGame.Runtime.GameModes
 
         private void Update()
         {
-            if (Keyboard.current.enterKey.wasPressedThisFrame)
+            if (Keyboard.current.rightBracketKey.wasPressedThisFrame)
             {
                 var target = FindObjectOfType<SpiderHealth>();
-                target.Damage(new DamageArgs
+                if (target) target.Damage(new DamageArgs
                 {
                     damage = 9999
                 }, null, target.transform.position, Vector2.up);

@@ -34,6 +34,7 @@ namespace UntitledSpiderGame.Runtime.Player
         public SpiderController ActiveSpider { get; private set; }
 
         public static readonly List<PlayerController> All = new();
+        public static bool FreezeInput { get; set; }
 
 
         public static event Action<PlayerController, GameObject, DamageArgs> KillEvent;
@@ -74,6 +75,7 @@ namespace UntitledSpiderGame.Runtime.Player
             {
                 DiedEvent?.Invoke(this, invoker, args);
             }
+
             if (invoker == ActiveSpider.gameObject)
             {
                 KillEvent?.Invoke(this, invoker, args);
@@ -82,20 +84,23 @@ namespace UntitledSpiderGame.Runtime.Player
 
         private void Update()
         {
-            if (ActiveSpider)
+            if (!FreezeInput)
             {
-                ActiveSpider.MoveDirection = actions["Move"].ReadValue<Vector2>();
-                ActiveSpider.ReachVector = actions["Reach"].ReadValue<Vector2>() * gamepadCursorDistance;
-                if (actions["Jump"].WasPerformedThisFrame()) ActiveSpider.Jump = true;
-                if (actions["Web"].WasPerformedThisFrame()) ActiveSpider.Web = true;
-
-                if (actions["Use"].WasPerformedThisFrame()) spiderWeapon.Shoot = true;
-                if (actions["Use"].WasReleasedThisFrame()) spiderWeapon.Shoot = false;
-
-                if (useMouse)
+                if (ActiveSpider)
                 {
-                    var mousePos = (Vector2)mainCamera.ScreenToWorldPoint(Mouse.current.position.ReadValue());
-                    ActiveSpider.ReachVector = mousePos - (Vector2)ActiveSpider.transform.position;
+                    ActiveSpider.MoveDirection = actions["Move"].ReadValue<Vector2>();
+                    ActiveSpider.ReachVector = actions["Reach"].ReadValue<Vector2>() * gamepadCursorDistance;
+                    if (actions["Jump"].WasPerformedThisFrame()) ActiveSpider.Jump = true;
+                    if (actions["Web"].WasPerformedThisFrame()) ActiveSpider.Web = true;
+
+                    if (actions["Use"].WasPerformedThisFrame()) spiderWeapon.Shoot = true;
+                    if (actions["Use"].WasReleasedThisFrame()) spiderWeapon.Shoot = false;
+
+                    if (useMouse)
+                    {
+                        var mousePos = (Vector2)mainCamera.ScreenToWorldPoint(Mouse.current.position.ReadValue());
+                        ActiveSpider.ReachVector = mousePos - (Vector2)ActiveSpider.transform.position;
+                    }
                 }
             }
         }

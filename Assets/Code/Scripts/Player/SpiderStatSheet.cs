@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace UntitledSpiderGame.Runtime.Player
 {
@@ -6,13 +7,18 @@ namespace UntitledSpiderGame.Runtime.Player
     public struct SpiderStatSheet
     {
         [Header("Weapon")]
-        public int damage;
+        public float damage;
         public float knockback;
+        public float bulletSize;
+        public float bulletLifetime;
+        public int bounces;
         public int ammo;
+        public int projectilesPerShot;
+        public float spreadTangent;
         public float reloadTime;
         public float bulletSpeed;
         public float attackSpeed;
-        public bool automatic;
+        public int automatic;
         public float recoilResponse;
         public float recoilDecay;
         public float recoilForce;
@@ -26,18 +32,23 @@ namespace UntitledSpiderGame.Runtime.Player
 
         public static readonly SpiderStatSheet Defaults = new()
         {
-            damage = 1,
+            damage = 45,
             knockback = 10.0f,
+            bulletSize = 1.0f,
+            bulletLifetime = 60.0f,
             ammo = 7,
+            bounces = 0,
+            projectilesPerShot = 1,
+            spreadTangent = 0.0f,
             reloadTime = 1.0f,
             bulletSpeed = 35,
-            attackSpeed = 50.0f,
-            automatic = false,
+            attackSpeed = 10.0f,
+            automatic = 0,
             recoilResponse = 1.2f,
             recoilDecay = 45.0f,
             recoilForce = 7.0f,
             moveSpeed = 10.0f,
-            health = 3,
+            health = 100,
             webRange = 30.0f,
             webForce = 200.0f,
         };

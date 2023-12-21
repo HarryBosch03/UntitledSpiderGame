@@ -7,7 +7,7 @@ namespace UntitledSpiderGame.Runtime.Spider
     public class SpiderWeapon : SpiderModule
     {
         public int ammo;
-        
+
         public Projectile prefab;
         public Transform prefabSpawnPoint;
 
@@ -53,13 +53,16 @@ namespace UntitledSpiderGame.Runtime.Spider
             }
         }
 
-        private void ResetFlags() { Shoot = false; }
+        private void ResetFlags()
+        {
+            if (Stats.automatic <= 0) Shoot = false;
+        }
 
         private void Reload()
         {
             if (Time.time - lastFireTime > Stats.reloadTime)
             {
-                ammo = Stats.ammo;
+                ammo = Mathf.Max(Stats.ammo, 1);
             }
         }
 
@@ -72,11 +75,22 @@ namespace UntitledSpiderGame.Runtime.Spider
                     damage = Stats.damage,
                     knockback = Stats.knockback,
                 };
-                
-                prefab.Spawn(gameObject, prefabSpawnPoint.position, spider.ReachVector.normalized, Stats.bulletSpeed, damage);
-                
+
+                var shots = Mathf.Max(1, Stats.projectilesPerShot);
+                for (var i = 0; i < shots; i++)
+                {
+                    var normal = spider.ReachVector.normalized;
+                    var tangent = new Vector2(-normal.y, normal.x);
+                    var spread = Random.Range(-1.0f, 1.0f) * Mathf.Max(0.0f, Stats.spreadTangent) * 0.5f;
+                    var direction = (normal + tangent * spread).normalized;
+
+                    var speedVariance = Mathf.Pow(2.0f, Stats.spreadTangent);
+                    var speed = Stats.bulletSpeed * Random.Range(1.0f / speedVariance, speedVariance);
+                    prefab.Spawn(gameObject, prefabSpawnPoint.position, direction, speed, damage, Stats.bulletLifetime, Stats.bounces, Stats.bulletSize);
+                }
+
                 spider.Body.AddForce(-spider.ReachVector.normalized * Stats.recoilForce, ForceMode2D.Impulse);
-                
+
                 ammo--;
                 lastFireTime = Time.time;
             }

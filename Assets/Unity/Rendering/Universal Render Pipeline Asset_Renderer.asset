@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: DownscaleFeature
   m_EditorClassIdentifier: 
   m_Active: 0
-  pixelsPerUnit: 16
+  pixelsPerUnit: 8
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0

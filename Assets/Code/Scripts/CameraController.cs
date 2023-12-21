@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UntitledSpiderGame.Runtime.Data;
 using UntitledSpiderGame.Runtime.Player;
 using UntitledSpiderGame.Runtime.Spider;
 using UntitledSpiderGame.Runtime.Utility;
@@ -18,6 +19,10 @@ namespace UntitledSpiderGame.Runtime
         public float padding = 15.0f;
         public float minSize = 10.0f;
 
+        [Space]
+        public Color highContrastClearColor = Color.white;
+        [HideInInspector] public Color defaultClearColor;
+        
         private new Camera camera;
 
         private DampedSpring min;
@@ -28,10 +33,22 @@ namespace UntitledSpiderGame.Runtime
         private event Action FixedUpdateEvent;
         private static event Action<float> ShakeEvent;
 
-        private void Awake() { camera = Camera.main; }
+        private void Awake()
+        {
+            camera = Camera.main;
+            defaultClearColor = camera.backgroundColor;
+        }
+
+        private void OnFileSaved(GameSettings saveData)
+        {
+            camera.backgroundColor = saveData.highContrastLevel ? highContrastClearColor : defaultClearColor;
+        }
 
         private void OnEnable()
         {
+            SaveFile.Settings.FileSavedEvent += OnFileSaved;
+            OnFileSaved(SaveFile.Settings);
+            
             var v = new Vector2(camera.aspect, 1.0f);
             min = new DampedSpring((Vector2)camera.transform.position - v * minSize, ref FixedUpdateEvent);
             max = new DampedSpring((Vector2)camera.transform.position + v * minSize, ref FixedUpdateEvent);
@@ -39,7 +56,11 @@ namespace UntitledSpiderGame.Runtime
             ShakeEvent += OnShake;
         }
 
-        private void OnDisable() { ShakeEvent -= OnShake; }
+        private void OnDisable()
+        {
+            SaveFile.Settings.FileSavedEvent -= OnFileSaved;
+            ShakeEvent -= OnShake;
+        }
 
         private void OnShake(float shake) { shakeVolume += shake; }
 

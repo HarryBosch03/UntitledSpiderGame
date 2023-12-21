@@ -10,7 +10,7 @@ namespace UntitledSpiderGame.Runtime.Player
         public SpiderStatSheet baseStats = SpiderStatSheet.Defaults;
         public SpiderStatSheet finalStats;
 
-        public List<StatModification> statModifications = new();
+        public readonly List<StatModification> statModifications = new();
 
         public void Rebuild()
         {
@@ -18,18 +18,18 @@ namespace UntitledSpiderGame.Runtime.Player
 
             foreach (var mod in statModifications.OrderBy(e => e.order))
             {
-                baseStats = mod.modification(baseStats);
+                mod.modification(ref finalStats);
             }
         }
 
         public class StatModification
         {
             public Modification modification;
-            public int order;
+            public uint order;
             
-            public delegate SpiderStatSheet Modification(SpiderStatSheet input);
+            public delegate void Modification(ref SpiderStatSheet stats);
 
-            public StatModification(Modification modification, int order)
+            public StatModification(Modification modification, uint order)
             {
                 this.modification = modification;
                 this.order = order;

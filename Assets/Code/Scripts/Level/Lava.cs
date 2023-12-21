@@ -19,7 +19,7 @@ namespace UntitledSpiderGame.Runtime.Level
                 var damageable = e.GetComponent<IDamagable>();
                 damageable.Damage(new DamageArgs
                 {
-                    damage = 1
+                    damage = 10
                 }, gameObject, e.transform.position, Vector2.up);
             }
         }

@@ -243,7 +243,7 @@ namespace UntitledSpiderGame.Runtime.Generation
             Damage(args.damage, max.x, max.y);
         }
 
-        public void Damage(int damage, int x, int y)
+        public void Damage(float damage, int x, int y)
         {
             mapData.Damage(damage, x, y);
             MarkDirty(x, y);

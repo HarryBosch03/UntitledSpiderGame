@@ -24,7 +24,7 @@
             struct Varyings
             {
                 float4 vertex : SV_POSITION;
-                float2 position : VAR_POSITION;
+                float2 uv : TEXCOORD0;
             };
 
             static const float2 verts[] =
@@ -38,21 +38,22 @@
             {
                 Varyings output;
                 output.vertex = float4(verts[id], 0, 1);
-                output.position = mul(UNITY_MATRIX_I_VP, output.vertex).xy;
+                output.uv = output.vertex * 0.5 + 0.5;
+                output.uv.y = 1.0 - output.uv.y;
                 return output;
             }
 
-            static const float ppu = 16.0f;
+            static const float ppu = 8.0f;
 
             float4 _CameraOpaqueTexture_TexelSize;
             
             half4 frag(Varyings input) : SV_Target
             {
-                half2 worldPos = floor(input.position * ppu) / ppu;
-                half2 clipPos = TransformWorldToHClip(float3(worldPos, 0)).xy;
-                half2 uv = (clipPos + 1.0) * 0.5;
-                uv.y = 1 - uv.y;
+                float pixels = unity_OrthoParams.y * ppu;
+                float aspect = _CameraOpaqueTexture_TexelSize.z * _CameraOpaqueTexture_TexelSize.y;
+                float2 downscale = float2(aspect, 1.0) * pixels;
 
+                float2 uv = floor(input.uv * downscale) / downscale;
                 half3 col = SampleSceneColor(uv);
                 return half4(col, 1.0);
             }

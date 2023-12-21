@@ -53,7 +53,6 @@ namespace UntitledSpiderGame.Runtime.Spider
         private void OnDisable()
         {
             All.Remove(this);
-            stats.statModifications.Clear();
         }
 
         private void FixedUpdate()

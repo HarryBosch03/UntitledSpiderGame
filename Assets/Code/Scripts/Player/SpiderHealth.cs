@@ -1,15 +1,15 @@
 using System;
 using UnityEngine;
+using UntitledSpiderGame.Runtime.Spider;
 using UntitledSpiderGame.Runtime.Utility;
 
 namespace UntitledSpiderGame.Runtime.Player
 {
-    public class SpiderHealth : MonoBehaviour, IDamagable
+    public class SpiderHealth : SpiderModule, IDamagable
     {
-        public int currentHealth;
+        [Range(0.0f, 1.0f)]
+        public float healthPercent;
         public int maxHealth;
-
-        private Rigidbody2D body;
 
         private ParticleSystem hitEffect;
         private ParticleSystem deathEffect;
@@ -18,9 +18,9 @@ namespace UntitledSpiderGame.Runtime.Player
         public static event DamageEvent DamagedEvent;
         public static event DamageEvent DiedEvent;
 
-        private void Awake()
+        protected override void Awake()
         {
-            body = GetComponent<Rigidbody2D>();
+            base.Awake();
             
             deathEffect = transform.Find<ParticleSystem>("DeathFX");
             hitEffect = transform.Find<ParticleSystem>("HitFX");
@@ -28,28 +28,45 @@ namespace UntitledSpiderGame.Runtime.Player
 
         private void OnEnable()
         {
-            currentHealth = maxHealth;
+            healthPercent = 1.0f;
             deathEffect.gameObject.SetActive(false);
         }
 
         public event Action HealthChangedEvent;
-        public int CurrentHealth => currentHealth;
+        public int CurrentHealth
+        {
+            get => Mathf.RoundToInt(healthPercent * MaxHealth);
+            set => healthPercent = (float)value / MaxHealth;
+        }
+
         public int MaxHealth => maxHealth;
+
+        private void Update()
+        {
+            if (maxHealth != Stats.health)
+            {
+                maxHealth = Stats.health;
+                HealthChangedEvent?.Invoke();
+            }
+        }
 
         public void Damage(DamageArgs args, GameObject invoker, Vector2 point, Vector2 direction)
         {
-            currentHealth -= args.damage;
-            body.AddForce(direction.normalized * args.knockback, ForceMode2D.Impulse);
+            CurrentHealth -= IDamagable.Round(args.damage);
+            Spider.Body.AddForce(direction.normalized * args.knockback, ForceMode2D.Impulse);
 
             if (invoker) LastDamageInvoker = invoker;
             
             HealthChangedEvent?.Invoke();
             DamagedEvent?.Invoke(this, LastDamageInvoker, args);
             
-            if (currentHealth <= 0)
+            if (CurrentHealth <= 0)
             {
-                deathEffect.gameObject.SetActive(true);
-                deathEffect.transform.SetParent(null);
+                if (deathEffect)
+                {
+                    var fx = Instantiate(deathEffect, transform.position, transform.rotation, null);
+                    fx.gameObject.SetActive(true);
+                }
                 
                 gameObject.SetActive(false);
                 CameraController.Shake(1.0f);
