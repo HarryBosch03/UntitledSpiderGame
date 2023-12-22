@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.EventSystems;
+﻿using UnityEngine;
 using UnityEngine.InputSystem;
 using UntitledSpiderGame.Runtime.Mods;
 using UntitledSpiderGame.Runtime.Player;

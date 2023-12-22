@@ -1,7 +1,5 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Serialization;
 using UntitledSpiderGame.Runtime.Player;
 
 namespace UntitledSpiderGame.Runtime.Spider

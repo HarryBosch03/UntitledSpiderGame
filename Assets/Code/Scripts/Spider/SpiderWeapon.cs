@@ -1,5 +1,6 @@
 using UnityEngine;
 using UntitledSpiderGame.Runtime.Extras;
+using UntitledSpiderGame.Runtime.Utility;
 
 namespace UntitledSpiderGame.Runtime.Spider
 {
@@ -35,23 +36,29 @@ namespace UntitledSpiderGame.Runtime.Spider
 
         private void UpdateLeg()
         {
-            var leg = spider.ArmLeg;
-            var reach = spider.ReachVector;
-
-            if (spider.Reaching)
-            {
-                var position = spider.Body.position + Vector2.ClampMagnitude(reach, leg.lengthTotal);
-                position -= reach.normalized * Mathf.Pow(2.0f, -(Time.time - lastFireTime) * Stats.recoilDecay) * Stats.recoilResponse;
-
-                leg.OverridePosition = position;
-                leg.OverrideDirection = reach;
-            }
-            else
-            {
-                leg.OverridePosition = null;
-                leg.OverrideDirection = null;
-            }
+            if (spider.Reaching) OverrideSpiderArmPosition();
+            else ClearSpiderArmOverride();
         }
+
+        private void ClearSpiderArmOverride()
+        {
+            spider.ArmLeg.OverridePosition = null;
+            spider.ArmLeg.OverrideDirection = null;
+        }
+
+        private void OverrideSpiderArmPosition()
+        {
+            var reach = spider.ReachVector;
+            var leg = spider.ArmLeg;
+
+            var position = spider.Body.position + Vector2.ClampMagnitude(reach, leg.lengthTotal);
+            position -= reach.normalized * CalculateRecoil();
+
+            leg.OverridePosition = position;
+            leg.OverrideDirection = reach;
+        }
+
+        private float CalculateRecoil() => Mathf.Pow(2.0f, -(Time.time - lastFireTime) * Stats.recoilDecay) * Stats.recoilResponse;
 
         private void ResetFlags()
         {
@@ -68,32 +75,65 @@ namespace UntitledSpiderGame.Runtime.Spider
 
         private void TryShoot()
         {
-            if (Shoot && Time.time - lastFireTime > 1.0f / Stats.attackSpeed && ammo > 0 && spider.Reaching)
+            if (!Shoot) return;
+            if (Time.time - lastFireTime < 1.0f / Stats.attackSpeed) return;
+            if (ammo == 0) return;
+            if (!spider.Reaching) return;
+
+            var shots = Mathf.Max(1, Stats.projectilesPerShot);
+            for (var i = 0; i < shots; i++)
             {
-                var damage = new DamageArgs()
-                {
-                    damage = Stats.damage,
-                    knockback = Stats.knockback,
-                };
-
-                var shots = Mathf.Max(1, Stats.projectilesPerShot);
-                for (var i = 0; i < shots; i++)
-                {
-                    var normal = spider.ReachVector.normalized;
-                    var tangent = new Vector2(-normal.y, normal.x);
-                    var spread = Random.Range(-1.0f, 1.0f) * Mathf.Max(0.0f, Stats.spreadTangent) * 0.5f;
-                    var direction = (normal + tangent * spread).normalized;
-
-                    var speedVariance = Mathf.Pow(2.0f, Stats.spreadTangent);
-                    var speed = Stats.bulletSpeed * Random.Range(1.0f / speedVariance, speedVariance);
-                    prefab.Spawn(gameObject, prefabSpawnPoint.position, direction, speed, damage, Stats.bulletLifetime, Stats.bounces, Stats.bulletSize);
-                }
-
-                spider.Body.AddForce(-spider.ReachVector.normalized * Stats.recoilForce, ForceMode2D.Impulse);
-
-                ammo--;
-                lastFireTime = Time.time;
+                var direction = CalculateBulletDirection();
+                var speed = CalculateBulletSpeed();
+                SpawnProjectile(direction, speed);
             }
+
+            AddRecoilForce();
+
+            ammo--;
+            lastFireTime = Time.time;
+        }
+
+        private void AddRecoilForce() { spider.Body.AddForce(-spider.ReachVector.normalized * Stats.recoilForce, ForceMode2D.Impulse); }
+
+        private float CalculateBulletSpeed()
+        {
+            var speedVariance = Mathf.Pow(2.0f, Stats.spreadTangent);
+            var speed = Stats.bulletSpeed * Random.Range(1.0f / speedVariance, speedVariance);
+            return speed;
+        }
+
+        private Vector2 CalculateBulletDirection()
+        {
+            var normal = spider.ReachVector.normalized;
+            var tangent = normal.Tangent();
+            var spread = Random.Range(-1.0f, 1.0f) * Mathf.Max(0.0f, Stats.spreadTangent) * 0.5f;
+            var direction = (normal + tangent * spread).normalized;
+            return direction;
+        }
+
+        private void SpawnProjectile(Vector2 direction, float speed)
+        {
+            var damage = new DamageArgs()
+            {
+                damage = Stats.damage,
+                knockback = Stats.knockback,
+            };
+            
+            prefab.Spawn
+            (
+                gameObject,
+                prefabSpawnPoint.position,
+                direction,
+                new Projectile.ProjectileSpawnArgs
+                {
+                    speed = speed,
+                    damage = damage,
+                    lifetime = Stats.bulletLifetime,
+                    bounces = Stats.bounces,
+                    size = Stats.bulletSize,
+                }
+            );
         }
     }
 }

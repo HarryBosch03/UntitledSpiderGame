@@ -1,7 +1,6 @@
 using System;
 using UnityEngine;
 using UntitledSpiderGame.Runtime.Data;
-using UntitledSpiderGame.Runtime.Player;
 using UntitledSpiderGame.Runtime.Spider;
 using UntitledSpiderGame.Runtime.Utility;
 

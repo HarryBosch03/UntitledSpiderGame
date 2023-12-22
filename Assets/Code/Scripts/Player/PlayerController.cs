@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.Serialization;
 using UntitledSpiderGame.Runtime.Spider;
 
 namespace UntitledSpiderGame.Runtime.Player

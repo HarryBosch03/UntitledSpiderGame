@@ -8,5 +8,6 @@ namespace UntitledSpiderGame.Runtime.GameModes
         public float respawnTime;
         public int scoreOnDeath;
         public int scoreOnKill;
+        public bool allowJoin;
     }
 }

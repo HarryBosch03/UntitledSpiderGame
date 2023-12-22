@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace UntitledSpiderGame.Runtime.Player
 {
@@ -12,6 +11,7 @@ namespace UntitledSpiderGame.Runtime.Player
         public float bulletSize;
         public float bulletLifetime;
         public int bounces;
+        public int fractures;
         public int ammo;
         public int projectilesPerShot;
         public float spreadTangent;
@@ -38,6 +38,7 @@ namespace UntitledSpiderGame.Runtime.Player
             bulletLifetime = 60.0f,
             ammo = 7,
             bounces = 0,
+            fractures = 0,
             projectilesPerShot = 1,
             spreadTangent = 0.0f,
             reloadTime = 1.0f,

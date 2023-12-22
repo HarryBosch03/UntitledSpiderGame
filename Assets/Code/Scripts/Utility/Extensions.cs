@@ -13,6 +13,8 @@ namespace UntitledSpiderGame.Runtime.Utility
             return actionReference.action?.ReadValue<Vector2>() ?? UnityEngine.Vector2.zero;
         }
 
+        public static Vector2 Tangent(this Vector2 v) => new(-v.y, v.x);
+
         public static float Axis(this InputActionReference actionReference)
         {
             return actionReference.action?.ReadValue<float>() ?? 0.0f;

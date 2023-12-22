@@ -1,7 +1,5 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 using UntitledSpiderGame.Runtime.Extras;
-using UntitledSpiderGame.Runtime.Spider;
 
 namespace UntitledSpiderGame.Runtime.Mods.Weapons
 {
