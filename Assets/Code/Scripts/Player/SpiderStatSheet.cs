@@ -12,6 +12,8 @@ namespace UntitledSpiderGame.Runtime.Player
         public float bulletLifetime;
         public int bounces;
         public int fractures;
+        public float gravity;
+        public bool pierce;
         public int ammo;
         public int projectilesPerShot;
         public float spreadTangent;
@@ -39,6 +41,8 @@ namespace UntitledSpiderGame.Runtime.Player
             ammo = 7,
             bounces = 0,
             fractures = 0,
+            gravity = 1.0f,
+            pierce = false,
             projectilesPerShot = 1,
             spreadTangent = 0.0f,
             reloadTime = 1.0f,

@@ -132,6 +132,9 @@ namespace UntitledSpiderGame.Runtime.Spider
                     lifetime = Stats.bulletLifetime,
                     bounces = Stats.bounces,
                     size = Stats.bulletSize,
+                    fractures = Stats.fractures,
+                    gravity = Stats.gravity,
+                    pierce = Stats.pierce,
                 }
             );
         }
