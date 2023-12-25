@@ -1,4 +1,5 @@
 using UnityEngine;
+using UntitledSpiderGame.Runtime.Items;
 using UntitledSpiderGame.Runtime.Spider;
 
 namespace UntitledSpiderGame.Runtime.Player
@@ -17,6 +18,8 @@ namespace UntitledSpiderGame.Runtime.Player
         public Vector2? OverridePosition { get; set; }
         public Vector2? OverrideDirection { get; set; }
         public bool Locked { get; set; }
+        public bool Use { get; set; }
+        public Item Item { get; private set; }
 
         public Vector2 root, mid, tip;
         public Vector2 smoothedRoot, smoothedMid, smoothedTip;
@@ -55,6 +58,11 @@ namespace UntitledSpiderGame.Runtime.Player
 
             IK();
             UpdateTransforms();
+
+            if (Item)
+            {
+                Item.Input = Use;
+            }
         }
 
         private void UpdateTarget()
@@ -192,6 +200,13 @@ namespace UntitledSpiderGame.Runtime.Player
 
                 flipped = !flipped;
             }
+        }
+
+        public void SetItem(Item item)
+        {
+            if (Item) Item.Unbind();
+            Item = item; 
+            if (Item) Item.Bind(Movement.Spider.Body, tipTransform);
         }
     }
 }

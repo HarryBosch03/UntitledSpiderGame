@@ -191,7 +191,6 @@ GameObject:
   - component: {fileID: 3373450816341298516}
   - component: {fileID: 3373450816341298518}
   - component: {fileID: 4470308104192520110}
-  - component: {fileID: 5121861374919411459}
   - component: {fileID: 7568559091892943509}
   - component: {fileID: 7662201884724152477}
   m_Layer: 7
@@ -256,6 +255,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   stats: {fileID: 0}
+  startingItem: {fileID: 2984034225474267009, guid: c5bbc6890b9844c40ae879a14384aa96, type: 3}
 --- !u!114 &4470308104192520110
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -268,23 +268,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aba6482db22c9eb47b918e433c075c26, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  currentHealth: 3
+  healthPercent: 0
   maxHealth: 3
---- !u!114 &5121861374919411459
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3373450816341298512}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 508db8a27abd4e1d9ca41e6aec367599, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  ammo: 7
-  prefab: {fileID: 9092994082209271172, guid: feb55d0c82e05e04987ebc9d061c2e32, type: 3}
-  prefabSpawnPoint: {fileID: 2339694442773294706}
 --- !u!114 &7568559091892943509
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -960,11 +945,6 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 1.0163181, y: 0.10876417}
   m_EdgeRadius: 0
---- !u!4 &2339694442773294706 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 1056274533485730008, guid: 9aaabc26bc090f044ad18593a604d391, type: 3}
-  m_PrefabInstance: {fileID: 3373450814906463914}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &2979798393577869633 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 9aaabc26bc090f044ad18593a604d391, type: 3}

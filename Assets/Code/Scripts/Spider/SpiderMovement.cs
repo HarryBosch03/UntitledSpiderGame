@@ -98,6 +98,9 @@ namespace UntitledSpiderGame.Runtime.Spider
             }
 
             Spider.Anchored = legsAnchored > 0;
+
+            Spider.ArmLeg.OverridePosition = Spider.Reaching ? (Vector2)transform.position + Spider.ReachVector.normalized * 1.5f : null;
+            Spider.ArmLeg.OverrideDirection = Spider.Reaching ? Spider.ReachVector.normalized : null;
         }
 
         public void Move()
