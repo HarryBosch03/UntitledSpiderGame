@@ -26,6 +26,8 @@ namespace UntitledSpiderGame.Runtime.Extras
 
         public Projectile Spawn(GameObject shooter, Vector2 position, Vector2 direction, ProjectileSpawnArgs args)
         {
+            if (args.size < 0.1f) return null;
+
             var instance = Instantiate(this);
             instance.shooter = shooter;
             instance.transform.position = position;
@@ -50,6 +52,8 @@ namespace UntitledSpiderGame.Runtime.Extras
 
         protected virtual void FixedUpdate()
         {
+            transform.localScale = Vector3.one * Mathf.Sqrt(args.size);
+
             if (age > args.lifetime)
             {
                 Destroy(gameObject);
@@ -83,6 +87,23 @@ namespace UntitledSpiderGame.Runtime.Extras
             transform.position = hit.point;
             DamageHit(hit);
 
+            if (args.bounces > 0)
+            {
+                for (var i = 0; i < this.args.fractures + 1; i++)
+                {
+                    var angle = this.args.fractures > 0 ? Mathf.Lerp(-45.0f, 45.0f, i / (float)this.args.fractures) : 0.0f;
+
+                    var args = this.args;
+                    args.bounces--;
+                    args.speed = velocity.magnitude;
+                    args.size *= 0.5f;
+
+                    var direction = Vector2.Reflect(velocity, hit.normal);
+                    direction = (direction.ToAngle() + angle).ToDirection();
+                    Spawn(shooter, hit.point, direction, args);
+                }
+            }
+
             DestroyWithStyle();
         }
 
@@ -91,7 +112,11 @@ namespace UntitledSpiderGame.Runtime.Extras
             var damageable = hit.collider.GetComponentInParent<IDamagable>();
             if ((Object)damageable)
             {
-                damageable.Damage(args.damage, shooter, hit.point, velocity.normalized);
+                var damage = args.damage;
+                damage.damage *= args.size;
+                damage.knockback *= args.size;
+
+                damageable.Damage(damage, shooter, hit.point, velocity.normalized);
             }
         }
 
@@ -116,7 +141,7 @@ namespace UntitledSpiderGame.Runtime.Extras
         {
             transform.position = (Vector2)transform.position + velocity * Time.deltaTime;
             velocity += force * Time.deltaTime;
-            force = Physics2D.gravity;
+            force = Physics2D.gravity * args.gravity;
 
             age += Time.deltaTime;
         }
@@ -124,7 +149,12 @@ namespace UntitledSpiderGame.Runtime.Extras
         public struct ProjectileSpawnArgs
         {
             public DamageArgs damage;
+            public int bounces;
+            public int fractures;
+            public bool pierce;
+            public float size;
             public float speed;
+            public float gravity;
             public float lifetime;
         }
     }

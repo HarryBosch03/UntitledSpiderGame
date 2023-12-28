@@ -24,6 +24,7 @@ namespace UntitledSpiderGame.Runtime.Player
         public InputActionAsset inputAsset;
         public float gamepadCursorDistance = 5.0f;
 
+        private SpiderWeapon spiderWeapon;
         private int playerIndex;
         private bool useMouse;
         private Camera mainCamera;
@@ -89,12 +90,10 @@ namespace UntitledSpiderGame.Runtime.Player
                     ActiveSpider.MoveDirection = actions["Move"].ReadValue<Vector2>();
                     ActiveSpider.ReachVector = actions["Reach"].ReadValue<Vector2>() * gamepadCursorDistance;
                     if (actions["Jump"].WasPerformedThisFrame()) ActiveSpider.Jump = true;
-                    
                     if (actions["Web"].WasPerformedThisFrame()) ActiveSpider.Web = true;
-                    if (actions["Web"].WasReleasedThisFrame()) ActiveSpider.Web = false;
 
-                    if (actions["Use"].WasPerformedThisFrame()) ActiveSpider.ArmLeg.Use = true;
-                    if (actions["Use"].WasReleasedThisFrame()) ActiveSpider.ArmLeg.Use = false;
+                    if (actions["Use"].WasPerformedThisFrame()) spiderWeapon.Shoot = true;
+                    if (actions["Use"].WasReleasedThisFrame()) spiderWeapon.Shoot = false;
 
                     if (useMouse)
                     {
@@ -130,6 +129,8 @@ namespace UntitledSpiderGame.Runtime.Player
         {
             ActiveSpider = spider;
             spider.SetColor(PlayerColors[playerIndex]);
+
+            spiderWeapon = spider.GetComponent<SpiderWeapon>();
         }
     }
 }

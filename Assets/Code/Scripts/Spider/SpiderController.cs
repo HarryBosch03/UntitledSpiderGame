@@ -1,7 +1,5 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UntitledSpiderGame.Runtime.Items;
 using UntitledSpiderGame.Runtime.Player;
 
 namespace UntitledSpiderGame.Runtime.Spider
@@ -11,7 +9,6 @@ namespace UntitledSpiderGame.Runtime.Spider
     public sealed class SpiderController : MonoBehaviour
     {
         public SpiderStats stats;
-        public Item startingItem;
 
         public readonly List<Renderer> coloredBodyParts = new();
         
@@ -54,12 +51,6 @@ namespace UntitledSpiderGame.Runtime.Spider
         private void OnDisable()
         {
             All.Remove(this);
-        }
-
-        private void Start()
-        {
-            var item = Instantiate(startingItem);
-            ArmLeg.SetItem(item);
         }
 
         private void FixedUpdate()

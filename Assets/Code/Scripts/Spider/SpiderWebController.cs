@@ -22,7 +22,7 @@ namespace UntitledSpiderGame.Runtime.Spider
         protected override void Awake()
         {
             base.Awake();
-
+            
             spider = GetComponent<SpiderController>();
             lines = transform.Find<LineRenderer>("Webs");
         }
@@ -30,7 +30,12 @@ namespace UntitledSpiderGame.Runtime.Spider
         public void FixedUpdate()
         {
             var body = spider.Body;
-            Input(spider.Web && spider.Reaching, spider.ReachVector);
+
+            if (spider.Web && spider.Reaching)
+            {
+                Input(spider.ReachVector);
+                spider.Web = false;
+            }
 
             if (CurrentState == State.Attached)
             {
@@ -42,11 +47,11 @@ namespace UntitledSpiderGame.Runtime.Spider
 
                 var point = (Vector2)hit.collider.transform.TransformPoint(localHitPoint);
                 var force = (point - body.position).normalized * Stats.webForce;
-
+                
                 if (hit.rigidbody) hit.rigidbody.AddForce(-force);
                 else body.AddForce(force);
-
-                var distance = (point - body.position).magnitude;
+                
+                var distance = (point - body.position).magnitude; 
                 if (distance > Stats.webRange)
                 {
                     var direction = (body.position - point).normalized;
@@ -54,13 +59,12 @@ namespace UntitledSpiderGame.Runtime.Spider
                     body.position = point + direction * Stats.webRange;
                     body.velocity += direction * Mathf.Max(0.0f, -Vector2.Dot(direction, body.velocity));
                 }
-
+                
                 if (distance < 2.0f)
                 {
                     Detach();
                     animation = 0.0f;
                 }
-
                 if (Vector2.Dot(hit.normal, body.position - point) < 0.0f)
                 {
                     Detach();
@@ -89,9 +93,9 @@ namespace UntitledSpiderGame.Runtime.Spider
                 lines.enabled = false;
                 return;
             }
-
+            
             var point = (Vector2)hit.collider.transform.TransformPoint(localHitPoint);
-
+            
             lines.enabled = true;
             lines.useWorldSpace = true;
             lines.positionCount = 128;
@@ -117,48 +121,54 @@ namespace UntitledSpiderGame.Runtime.Spider
             }
         }
 
-        public void Input(bool state, Vector2 direction)
+        public void Input(Vector2 direction)
         {
             direction.Normalize();
 
-            if (CurrentState == State.Idle && state)
+            switch (CurrentState)
             {
-                var start = spider.Body.position;
-                var hits = Physics2D.RaycastAll(start, direction, Stats.webRange, (1 << 0) | (1 << 7));
-                var didHit = false;
-                foreach (var hit in hits)
+                case State.Idle:
                 {
-                    if (hit.collider.transform.IsChildOf(spider.transform)) continue;
+                    var start = spider.Body.position;
+                    var hits = Physics2D.RaycastAll(start, direction, Stats.webRange, (1 << 0) | (1 << 7));
+                    var didHit = false;
+                    foreach (var hit in hits)
+                    {
+                        if (hit.collider.transform.IsChildOf(spider.transform)) continue;
 
-                    if (!didHit)
-                    {
-                        this.hit = hit;
-                        didHit = true;
+                        if (!didHit)
+                        {
+                            this.hit = hit;
+                            didHit = true;
+                        }
+                        else if (hit.distance < this.hit.distance)
+                        {
+                            this.hit = hit;
+                        }
                     }
-                    else if (hit.distance < this.hit.distance)
+                    if (didHit)
                     {
-                        this.hit = hit;
+                        CurrentState = State.Casting;
+                        localHitPoint = hit.collider.transform.InverseTransformPoint(hit.point);
                     }
+                    break;
                 }
-
-                if (didHit)
+                case State.Casting:
                 {
-                    CurrentState = State.Casting;
-                    localHitPoint = hit.collider.transform.InverseTransformPoint(hit.point);
+                    Detach();
+                    break;
                 }
-            }
-            
-            if (CurrentState == State.Attached && !state)
-            {
-                Detach();
+                case State.Attached:
+                {
+                    Detach();
+                    break;
+                }
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
         }
 
-        private void Detach()
-        {
-            CurrentState = State.Idle;
-            spider.Web = false;
-        }
+        private void Detach() { CurrentState = State.Idle; }
 
         public enum State
         {
