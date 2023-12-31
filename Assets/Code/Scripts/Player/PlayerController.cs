@@ -25,7 +25,6 @@ namespace UntitledSpiderGame.Runtime.Player
         public float gamepadCursorDistance = 5.0f;
 
         private SpiderWeapon spiderWeapon;
-        private int playerIndex;
         private bool useMouse;
         private Camera mainCamera;
         private Dictionary<string, InputAction> actions;
@@ -35,6 +34,7 @@ namespace UntitledSpiderGame.Runtime.Player
         public static readonly List<PlayerController> All = new();
         public static bool FreezeInput { get; set; }
 
+        public int PlayerIndex { get; private set; }
 
         public static event Action<PlayerController, GameObject, DamageArgs> KillEvent;
         public static event Action<PlayerController, GameObject, DamageArgs> DiedEvent;
@@ -53,7 +53,7 @@ namespace UntitledSpiderGame.Runtime.Player
                 actions.Add(e.name, e);
             }
 
-            playerIndex = All.Count;
+            PlayerIndex = All.Count;
             All.Add(this);
 
             SpiderHealth.DiedEvent += OnSpiderDied;
@@ -128,7 +128,7 @@ namespace UntitledSpiderGame.Runtime.Player
         public void AssignSpider(SpiderController spider)
         {
             ActiveSpider = spider;
-            spider.SetColor(PlayerColors[playerIndex]);
+            spider.SetColor(PlayerColors[PlayerIndex]);
 
             spiderWeapon = spider.GetComponent<SpiderWeapon>();
         }

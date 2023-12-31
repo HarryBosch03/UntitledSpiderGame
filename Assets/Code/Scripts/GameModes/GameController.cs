@@ -15,9 +15,7 @@ namespace UntitledSpiderGame.Runtime.GameModes
         [SerializeField] private PlayerController playerControllerPrefab;
         [SerializeField] private SpiderController spiderPrefab;
         [SerializeField] private GamemodeSettings settings;
-        [SerializeField] private float spawnMin;
-        [SerializeField] private float spawnMax;
-        [SerializeField] private float spawnHeight;
+        [SerializeField] private Vector2[] spawnPoints;
         [SerializeField] private InputAction joinAction = new(binding: "/*/<button>");
 
         private static readonly List<InputDevice> RegisteredDevices = new();
@@ -37,7 +35,7 @@ namespace UntitledSpiderGame.Runtime.GameModes
         {
             joinAction.started -= JoinDevice;
             joinAction.Disable();
-            
+
             SpiderHealth.DiedEvent -= OnSpiderDied;
         }
 
@@ -64,9 +62,9 @@ namespace UntitledSpiderGame.Runtime.GameModes
 
             var spider = player.ActiveSpider;
             spider.gameObject.SetActive(true);
-            spider.transform.position = GetSpawnPoint();
+            spider.transform.position = GetSpawnPoint(player.PlayerIndex);
             spider.gameObject.SetActive(true);
-            
+
             player.AssignSpider(spider);
         }
 
@@ -75,24 +73,19 @@ namespace UntitledSpiderGame.Runtime.GameModes
             if (Keyboard.current.rightBracketKey.wasPressedThisFrame)
             {
                 var target = FindObjectOfType<SpiderHealth>();
-                if (target) target.Damage(new DamageArgs
-                {
-                    damage = 9999
-                }, null, target.transform.position, Vector2.up);
+                if (target)
+                    target.Damage(new DamageArgs
+                    {
+                        damage = 9999
+                    }, null, target.transform.position, Vector2.up);
             }
         }
 
-        public Vector2 GetSpawnPoint()
+        public Vector2 GetSpawnPoint(int index)
         {
-            for (var i = 0; i < 500; i++)
-            {
-                var x = Random.Range(spawnMin, spawnMax);
-
-                var start = new Vector2(x, spawnHeight);
-                var hit = Physics2D.CircleCast(start, 3.0f, Vector2.down);
-                if (hit) return hit.point + Vector2.up * 2.0f;
-            }
-            return Vector2.up * spawnHeight;
+            var c = spawnPoints.Length;
+            index = (index % c + c) % c;
+            return spawnPoints[index];
         }
 
         private void JoinDevice(InputAction.CallbackContext ctx) => JoinDevice(ctx.control.device);
@@ -128,12 +121,12 @@ namespace UntitledSpiderGame.Runtime.GameModes
         {
             var pcInstance = Instantiate(playerControllerPrefab);
             pcInstance.BindDevice(devices);
-            pcInstance.transform.position = GetSpawnPoint();
+            pcInstance.transform.position = Vector3.zero;
 
-            var sp = GetSpawnPoint();
+            var sp = GetSpawnPoint(pcInstance.PlayerIndex);
             var spiderInstance = Instantiate(spiderPrefab, sp, Quaternion.identity);
             pcInstance.AssignSpider(spiderInstance);
-            
+
             players.Add(pcInstance);
             scores.Add(0);
         }
@@ -141,8 +134,13 @@ namespace UntitledSpiderGame.Runtime.GameModes
         private void OnDrawGizmosSelected()
         {
             Gizmos.color = Color.yellow;
-            
-            Gizmos.DrawLine(new Vector2(spawnMin, spawnHeight), new Vector3(spawnMax, spawnHeight));
+            if (spawnPoints != null)
+            {
+                foreach (var sp in spawnPoints)
+                {
+                    Gizmos.DrawWireSphere(sp, 1.0f);
+                }
+            }
         }
     }
 }

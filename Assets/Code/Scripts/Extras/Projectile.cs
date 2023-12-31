@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using UnityEngine;
 using UntitledSpiderGame.Runtime.Player;
 using UntitledSpiderGame.Runtime.Utility;
@@ -15,7 +16,7 @@ namespace UntitledSpiderGame.Runtime.Extras
 
         public GameObject shooter;
         private Transform hitFX;
-        private ParticleSystem trail;
+        private TrailRenderer trail;
 
         public ProjectileSpawnArgs args;
 
@@ -42,13 +43,10 @@ namespace UntitledSpiderGame.Runtime.Extras
             hitFX = transform.Find("HitFX");
             if (hitFX) hitFX.gameObject.SetActive(false);
 
-            trail = transform.Find<ParticleSystem>("Trail");
+            trail = transform.Find<TrailRenderer>("Trail");
         }
 
-        private void Start()
-        {
-            velocity = transform.right * args.speed;
-        }
+        private void Start() { velocity = transform.right * args.speed; }
 
         protected virtual void FixedUpdate()
         {
@@ -60,11 +58,14 @@ namespace UntitledSpiderGame.Runtime.Extras
                 return;
             }
 
-            var stepDistance = velocity.magnitude * Time.deltaTime * 1.05f;
-            var hit = Physics2D.Raycast(transform.position, velocity, stepDistance, ProjectileLayerMask);
-            if (ValidateHit(hit))
+            var stepDistance = velocity.magnitude * Time.deltaTime * 1.15f;
+            var hits = Physics2D.RaycastAll(transform.position, velocity, stepDistance, ProjectileLayerMask);
+            foreach (var hit in hits.OrderBy(e => e.distance))
             {
+                if (!ValidateHit(hit)) continue;
+
                 ProcessHit(hit);
+                break;
             }
 
             Integrate();
@@ -89,18 +90,20 @@ namespace UntitledSpiderGame.Runtime.Extras
 
             if (args.bounces > 0)
             {
-                for (var i = 0; i < this.args.fractures + 1; i++)
+                var args = this.args;
+                args.bounces--;
+                args.fractures--;
+                args.speed = velocity.magnitude;
+                
+                for (var i = 0; i < (this.args.fractures > 0 ? 2 : 1); i++)
                 {
-                    var angle = this.args.fractures > 0 ? Mathf.Lerp(-45.0f, 45.0f, i / (float)this.args.fractures) : 0.0f;
-
-                    var args = this.args;
-                    args.bounces--;
-                    args.speed = velocity.magnitude;
-                    args.size *= 0.5f;
-
+                    var angle = this.args.fractures > 0 ? (i / (float)this.args.fractures * 2.0f - 1.0f) * 10.0f : 0.0f;
+                    
                     var direction = Vector2.Reflect(velocity, hit.normal);
-                    direction = (direction.ToAngle() + angle).ToDirection();
-                    Spawn(shooter, hit.point, direction, args);
+                    direction = (direction.ToAngle() + angle * Mathf.Deg2Rad).ToDirection();
+                    var point = hit.point + direction * 0.05f;
+                    var p = Spawn(shooter, point, direction, args);
+                    p.ignoreShooterFrames = ignoreShooterFrames;
                 }
             }
 
@@ -131,7 +134,8 @@ namespace UntitledSpiderGame.Runtime.Extras
             if (trail)
             {
                 trail.transform.SetParent(null);
-                trail.Stop();
+                trail.transform.position = transform.position;
+                Destroy(trail.gameObject, trail.time);
             }
 
             Destroy(gameObject);
@@ -146,6 +150,7 @@ namespace UntitledSpiderGame.Runtime.Extras
             age += Time.deltaTime;
         }
 
+        [Serializable]
         public struct ProjectileSpawnArgs
         {
             public DamageArgs damage;
